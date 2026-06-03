@@ -2,380 +2,472 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arène Multi-joueurs (2 Appareils)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Arena Neon - Multi-joueurs</title>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #1a202c;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #0d0e15;
             color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             overflow: hidden;
+            touch-action: none;
         }
 
+        /* Menu de connexion */
         .menu-container {
             text-align: center;
-            background: #2d3748;
+            background: #131722;
             padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            border: 1px solid #4a5568;
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+            border: 1px solid #00f2fe;
+            max-width: 90%;
+            width: 400px;
         }
-
+        h1 { margin-top: 0; color: #00f2fe; text-shadow: 0 0 10px rgba(0,242,254,0.5); font-size: 1.8rem; }
         .connection-box {
             margin-bottom: 20px;
             padding: 15px;
-            background: #1a202c;
+            background: #1c2030;
             border-radius: 8px;
-            border: 1px solid #4a5568;
+            border: 1px solid #2c3248;
         }
-
         input {
-            padding: 10px;
+            padding: 12px;
             font-size: 1rem;
-            width: 220px;
-            border: 1px solid #cbd5e1;
-            border-radius: 5px;
-            background: #2d3748;
+            width: 100%;
+            border: 1px solid #2c3248;
+            border-radius: 8px;
+            background: #0d0e15;
             color: white;
+            text-align: center;
+            margin-bottom: 10px;
         }
-
+        input:focus { border-color: #00f2fe; outline: none; }
         button {
-            padding: 10px 20px;
+            padding: 12px 24px;
             font-size: 1rem;
-            background: #3182ce;
-            color: white;
+            background: linear-gradient(45deg, #00f2fe, #4facfe);
+            color: #0d0e15;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
+            width: 100%;
+            transition: transform 0.1s;
         }
-        button:hover { background: #2b6cb0; }
+        button:active { transform: scale(0.98); }
 
-        /* Zone de jeu masquée au début */
-        #game-zone { display: none; text-align: center; }
-
-        canvas {
-            background-color: #2d3748;
-            border: 4px solid #4a5568;
-            border-radius: 10px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-
+        /* Interface du jeu */
+        #game-zone { display: none; width: 100%; max-width: 800px; padding: 10px; position: relative; }
         #ui {
             display: flex;
             justify-content: space-between;
-            width: 800px;
+            align-items: center;
             margin-bottom: 10px;
+            background: rgba(19, 23, 34, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #2c3248;
         }
-
         .hp-bar-container {
-            width: 250px;
-            background-color: #4a5568;
-            border-radius: 5px;
+            width: 120px;
+            background-color: #1c2030;
+            border-radius: 20px;
             overflow: hidden;
-            border: 2px solid #718096;
+            border: 1px solid #4a5568;
+            height: 14px;
+            margin-top: 4px;
         }
+        .hp-bar { height: 100%; width: 100%; transition: width 0.2s; }
+        #hp-p1 { background: linear-gradient(90deg, #00f2fe, #4facfe); box-shadow: 0 0 8px #00f2fe; }
+        #hp-p2 { background: linear-gradient(90deg, #ff0844, #ffb199); box-shadow: 0 0 8px #ff0844; }
+        #role-indicator { font-size: 0.9rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
 
-        .hp-bar { height: 20px; width: 100%; transition: width 0.1s ease; }
-        #hp-p1 { background-color: #3182ce; }
-        #hp-p2 { background-color: #e53e3e; }
+        /* Conteneur Canvas Responsive */
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #090a0f;
+            border-radius: 12px;
+            border: 2px solid #2c3248;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            overflow: hidden;
+        }
+        canvas { width: 100%; height: 100%; display: block; }
 
+        /* Contrôles tactiles (Mobile) */
+        #mobile-controls {
+            display: none; /* Activé via JS si mobile */
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            padding: 0 30px;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .joystick-zone {
+            width: 110px;
+            height: 110px;
+            background: rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+        }
+        .joystick-stick {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 242, 254, 0.6);
+            border: 2px solid #00f2fe;
+            border-radius: 50%;
+            position: absolute;
+            top: 33px;
+            left: 33px;
+            box-shadow: 0 0 10px #00f2fe;
+        }
+        .action-buttons { display: flex; gap: 15px; pointer-events: auto; }
+        .action-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid;
+            color: white;
+            font-weight: bold;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(19, 23, 34, 0.8);
+        }
+        #btn-shoot { border-color: #00f2fe; box-shadow: 0 0 10px rgba(0,242,254,0.3); }
+        #btn-dash { border-color: #ffb199; box-shadow: 0 0 10px rgba(255,177,153,0.3); }
+
+        /* Écran de fin */
         .winner-screen {
             display: none;
             position: absolute;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(13, 14, 21, 0.95);
             top: 0; left: 0; width: 100%; height: 100%;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 10;
         }
-        .winner-text { font-size: 3rem; font-weight: bold; margin-bottom: 20px; }
+        .winner-text { font-size: 2.5rem; font-weight: bold; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
 
     <div id="setup-zone" class="menu-container">
-        <h1>Arène En Ligne 🌐</h1>
+        <h1>CYBER ARENA NEON 🌐</h1>
         <div class="connection-box">
-            <p><strong>Étape 1 :</strong> Envoie ce code à ton ami :</p>
-            <h2 id="my-id" style="color: #63b3ed;">Génération du code...</h2>
+            <p style="margin:0 0 10px 0; font-size:0.9rem; color:#a0aec0;">Étape 1 : Partage ton code</p>
+            <h2 id="my-id" style="color: #00f2fe; margin:0; font-family:monospace; letter-spacing:1px;">...</h2>
         </div>
         <div class="connection-box">
-            <p><strong>Étape 2 :</strong> Ou colle le code de ton ami :</p>
+            <p style="margin:0 0 10px 0; font-size:0.9rem; color:#a0aec0;">Étape 2 : Ou rejoint ton ami</p>
             <input type="text" id="friend-id-input" placeholder="Coller le code ici">
-            <button onclick="connectToFriend()">Rejoindre la partie</button>
+            <button onclick="connectToFriend()">COMBATTRE</button>
         </div>
     </div>
 
     <div id="game-zone">
         <div id="ui">
             <div>
-                <div id="name-p1" style="font-weight: bold; color: #63b3ed;">Joueur Bleu (P1)</div>
+                <div id="name-p1" style="font-size:0.8rem; color: #00f2fe;">Bleu</div>
                 <div class="hp-bar-container"><div id="hp-p1" class="hp-bar"></div></div>
             </div>
-            <div id="role-indicator" style="font-size: 1.2rem; align-self: center; color: #a0aec0;">Connexion réussie !</div>
+            <div id="role-indicator">Connexion...</div>
             <div>
-                <div id="name-p2" style="font-weight: bold; color: #fc8181;">Joueur Rouge (P2)</div>
+                <div id="name-p2" style="font-size:0.8rem; color: #ff0844; text-align:right;">Rouge</div>
                 <div class="hp-bar-container"><div id="hp-p2" class="hp-bar"></div></div>
             </div>
         </div>
 
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
-    </div>
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="800" height="450"></canvas>
+            
+            <div class="winner-screen" id="winnerScreen">
+                <div class="winner-text" id="winnerText">Gagné !</div>
+                <button onclick="location.reload()" style="width:auto;">Rejouer</button>
+            </div>
+        </div>
 
-    <div class="winner-screen" id="winnerScreen">
-        <div class="winner-text" id="winnerText">Fin de la partie</div>
-        <button onclick="location.reload()">Recommencer une connexion</button>
+        <div id="mobile-controls">
+            <div class="joystick-zone" id="joyZone">
+                <div class="joystick-stick" id="joyStick"></div>
+            </div>
+            <div class="action-buttons">
+                <div class="action-btn" id="btn-dash">DASH</div>
+                <div class="action-btn" id="btn-shoot">FEU</div>
+            </div>
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Réseau PeerJS
         let peer = new Peer();
         let conn = null;
-        let isHost = false; // Le créateur est l'hôte (Bleu), le rejoignant est l'invité (Rouge)
+        let isHost = false;
 
-        // Gestion du clavier
         const keys = {};
         window.addEventListener('keydown', e => keys[e.code] = true);
         window.addEventListener('keyup', e => keys[e.code] = false);
 
-        // Données du jeu
+        // Détection mobile rapide
+        const isMobile = ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+        if (isMobile) {
+            document.getElementById('mobile-controls').style.display = 'flex';
+        }
+
+        // Configuration map néon
         const obstacles = [
-            { x: 200, y: 150, w: 40, h: 200 },
-            { x: 560, y: 150, w: 40, h: 200 },
-            { x: 350, y: 220, w: 100, h: 60 }
+            { x: 180, y: 100, w: 30, h: 250, color: '#bd10e0' },
+            { x: 590, y: 100, w: 30, h: 250, color: '#bd10e0' },
+            { x: 340, y: 195, w: 120, h: 60, color: '#bd10e0' }
         ];
 
-        let p1 = { x: 80, y: 250, size: 24, color: '#3182ce', dx: 1, dy: 0, hp: 100 };
-        let p2 = { x: 720, y: 250, size: 24, color: '#e53e3e', dx: -1, dy: 0, hp: 100 };
+        let p1 = { x: 100, y: 225, size: 18, color: '#00f2fe', dx: 1, dy: 0, hp: 100, dashing: 0 };
+        let p2 = { x: 700, y: 225, size: 18, color: '#ff0844', dx: -1, dy: 0, hp: 100, dashing: 0 };
         
         let localPlayer, remotePlayer;
         let bullets = [];
         let items = [];
+        let particles = [];
         let gameOver = false;
         let lastShot = 0;
-        const shotCooldown = 300; // ms
+        let lastDash = 0;
+        const shotCooldown = 250;
+        const dashCooldown = 1500;
 
-        // --- GESTION DU RÉSEAU (PEERJS) ---
+        // Joystick Virtuel Mathématiques
+        let joyActive = false;
+        let joyStart = { x: 0, y: 0 };
+        let joyMove = { x: 0, y: 0 };
+        const joyZone = document.getElementById('joyZone');
+        const joyStick = document.getElementById('joyStick');
+        const maxRadius = 40;
 
-        peer.on('open', (id) => {
-            document.getElementById('my-id').innerText = id;
+        joyZone.addEventListener('touchstart', e => {
+            joyActive = true;
+            const rect = joyZone.getBoundingClientRect();
+            joyStart = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
         });
 
-        // Cas 1 : Quelqu'un se connecte à moi (Je suis l'Hôte - P1 Bleu)
-        peer.on('connection', (connection) => {
-            conn = connection;
-            isHost = true;
-            localPlayer = p1;
-            remotePlayer = p2;
+        window.addEventListener('touchmove', e => {
+            if (!joyActive) return;
+            const touch = Array.from(e.touches).find(t => t.target === joyZone || joyZone.contains(t.target));
+            if (!touch) return;
+
+            let distX = touch.clientX - joyStart.x;
+            let distY = touch.clientY - joyStart.y;
+            let distance = Math.sqrt(distX*distX + distY*distY);
+
+            if (distance > maxRadius) {
+                distX = (distX / distance) * maxRadius;
+                distY = (distY / distance) * maxRadius;
+                distance = maxRadius;
+            }
+
+            joyStick.style.transform = `translate(${distX}px, ${distY}px)`;
+            
+            // Appliquer les directions au joueur
+            if (distance > 10) {
+                localPlayer.dx = distX / distance;
+                localPlayer.dy = distY / distance;
+                localPlayer.isMovingTouch = true;
+            }
+        });
+
+        window.addEventListener('touchend', () => {
+            joyActive = false;
+            joyStick.style.transform = 'translate(0px, 0px)';
+            if(localPlayer) localPlayer.isMovingTouch = false;
+        });
+
+        // Boutons tactiles Mobile
+        document.getElementById('btn-shoot').addEventListener('touchstart', () => { window.isActionShooting = true; });
+        document.getElementById('btn-shoot').addEventListener('touchend', () => { window.isActionShooting = false; });
+        document.getElementById('btn-dash').addEventListener('touchstart', () => { triggerDash(); });
+
+        // --- PEERJS NETWORKING ---
+        peer.on('open', id => document.getElementById('my-id').innerText = id);
+
+        peer.on('connection', connection => {
+            conn = connection; isHost = true;
+            localPlayer = p1; remotePlayer = p2;
             setupGame();
         });
 
-        // Cas 2 : Je me connecte à quelqu'un (Je suis l'Invité - P2 Rouge)
         function connectToFriend() {
-            const friendId = document.getElementById('friend-id-input').value.trim();
-            if(!friendId) return alert("Code invalide");
-            
-            conn = peer.connect(friendId);
-            isHost = false;
-            localPlayer = p2;
-            remotePlayer = p1;
-
-            conn.on('open', () => {
-                setupGame();
-            });
+            const fId = document.getElementById('friend-id-input').value.trim();
+            if(!fId) return;
+            conn = peer.connect(fId);
+            isHost = false; localPlayer = p2; remotePlayer = p1;
+            conn.on('open', setupGame);
         }
 
         function setupGame() {
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('game-zone').style.display = 'block';
-            document.getElementById('role-indicator').innerText = isHost ? "Tu es BLEU 🔵" : "Tu es ROUGE 🔴";
+            document.getElementById('role-indicator').innerHTML = isHost ? "<span style='color:#00f2fe'>BLEU</span>" : "<span style='color:#ff0844'>ROUGE</span>";
             
-            if(isHost) {
-                document.getElementById('name-p1').innerText = "Joueur Bleu (TOI)";
-            } else {
-                document.getElementById('name-p2').innerText = "Joueur Rouge (TOI)";
-            }
-
-            // Écoute des données reçues de l'autre joueur
-            conn.on('data', (data) => {
+            conn.on('data', data => {
                 if (data.type === 'SYNC') {
-                    remotePlayer.x = data.x;
-                    remotePlayer.y = data.y;
-                    remotePlayer.dx = data.dx;
-                    remotePlayer.dy = data.dy;
-                    remotePlayer.hp = data.hp;
+                    remotePlayer.x = data.x; remotePlayer.y = data.y;
+                    remotePlayer.dx = data.dx; remotePlayer.dy = data.dy;
+                    remotePlayer.hp = data.hp; remotePlayer.dashing = data.dashing;
                     updateHPBars();
                 } 
                 else if (data.type === 'SHOOT') {
                     bullets.push({ x: data.x, y: data.y, vx: data.vx, vy: data.vy, color: data.color, owner: 'remote' });
                 }
-                else if (data.type === 'ITEM_SPAWN') {
-                    items.push({ x: data.x, y: data.y, size: 12, id: data.id });
-                }
-                else if (data.type === 'ITEM_PICK') {
-                    items = items.filter(item => item.id !== data.id);
-                }
+                else if (data.type === 'ITEM') { items = data.items; }
+                else if (data.type === 'HIT') { createParticles(data.x, data.y, data.color); }
             });
 
-            // Lancement de la boucle de jeu
-            gameLoop();
-
-            // L'Hôte gère l'apparition des bonus médicaux toutes les 7 secondes
             if (isHost) {
                 setInterval(() => {
-                    if (gameOver || items.length >= 2) return;
-                    let itemX, itemY;
-                    do {
-                        itemX = Math.random() * (canvas.width - 60) + 30;
-                        itemY = Math.random() * (canvas.height - 60) + 30;
-                    } while (checkObstacleCollision(itemX, itemY, 15));
-
-                    let itemId = Date.now();
-                    items.push({ x: itemX, y: itemY, size: 12, id: itemId });
-                    
-                    // On envoie le bonus généré à l'invité
-                    conn.send({ type: 'ITEM_SPAWN', x: itemX, y: itemY, id: itemId });
-                }, 7000);
+                    if (gameOver || items.length >= 1) return;
+                    let rx = Math.random() * 700 + 50;
+                    let ry = Math.random() * 350 + 50;
+                    if (!checkObstacleCollision(rx, ry, 15)) {
+                        items.push({ x: rx, y: ry, size: 10 });
+                        conn.send({ type: 'ITEM', items: items });
+                    }
+                }, 6000);
             }
+
+            gameLoop();
         }
 
-        // --- MÉCANIQUES DE JEU ---
-
+        // --- MECHANICS ---
         function checkObstacleCollision(x, y, size) {
             for (let obs of obstacles) {
-                if (x + size > obs.x && x - size < obs.x + obs.w &&
-                    y + size > obs.y && y - size < obs.y + obs.h) {
-                    return true;
-                }
+                if (x + size > obs.x && x - size < obs.x + obs.w && y + size > obs.y && y - size < obs.y + obs.h) return true;
             }
             return false;
         }
 
+        function triggerDash() {
+            const now = Date.now();
+            if (now - lastDash > dashCooldown && !localPlayer.dashing) {
+                localPlayer.dashing = 12; // Dure 12 frames
+                lastDash = now;
+            }
+        }
+
         function updateLocalPlayer() {
-            let moveX = 0;
-            let moveY = 0;
-            let speed = 4;
+            let mx = 0, my = 0;
+            let currentSpeed = 3.5;
 
-            // Supporte ZQSD, WASD et les Flèches directionnelles pour le joueur local
-            if (keys['KeyW'] || keys['KeyZ'] || keys['ArrowUp']) moveY = -1;
-            if (keys['KeyS'] || keys['ArrowDown']) moveY = 1;
-            if (keys['KeyA'] || keys['KeyQ'] || keys['ArrowLeft']) moveX = -1;
-            if (keys['KeyD'] || keys['ArrowRight']) moveX = 1;
-
-            if (moveX !== 0 || moveY !== 0) {
-                localPlayer.dx = moveX;
-                localPlayer.dy = moveY;
+            if (localPlayer.dashing > 0) {
+                currentSpeed = 10; // Vitesse boostée
+                localPlayer.dashing--;
             }
 
-            // Déplacement X + Collision
-            localPlayer.x += moveX * speed;
+            // Clavier
+            if (keys['KeyW'] || keys['KeyZ'] || keys['ArrowUp']) my = -1;
+            if (keys['KeyS'] || keys['ArrowDown']) my = 1;
+            if (keys['KeyA'] || keys['KeyQ'] || keys['ArrowLeft']) mx = -1;
+            if (keys['KeyD'] || keys['ArrowRight']) mx = 1;
+            if (keys['ShiftLeft'] || keys['ShiftRight']) triggerDash();
+
+            if (mx !== 0 || my !== 0) {
+                localPlayer.dx = mx; localPlayer.dy = my;
+                localPlayer.isMovingTouch = false;
+            }
+
+            let finalX = mx, finalY = my;
+            if(isMobile && localPlayer.isMovingTouch) {
+                finalX = localPlayer.dx; finalY = localPlayer.dy;
+            }
+
+            // Déplacements rectifiés
+            localPlayer.x += finalX * currentSpeed;
             if (localPlayer.x - localPlayer.size < 0 || localPlayer.x + localPlayer.size > canvas.width || checkObstacleCollision(localPlayer.x, localPlayer.y, localPlayer.size)) {
-                localPlayer.x -= moveX * speed;
+                localPlayer.x -= finalX * currentSpeed;
             }
-
-            // Déplacement Y + Collision
-            localPlayer.y += moveY * speed;
+            localPlayer.y += finalY * currentSpeed;
             if (localPlayer.y - localPlayer.size < 0 || localPlayer.y + localPlayer.size > canvas.height || checkObstacleCollision(localPlayer.x, localPlayer.y, localPlayer.size)) {
-                localPlayer.y -= moveY * speed;
+                localPlayer.y -= finalY * currentSpeed;
             }
 
-            // Gestion du tir local
-            if (keys['Space'] || keys['Enter']) {
+            // Tir mécanique
+            if (keys['Space'] || keys['Enter'] || window.isActionShooting) {
                 const now = Date.now();
                 if (now - lastShot > shotCooldown) {
-                    let bSpeed = 7;
-                    let bulletData = {
-                        x: localPlayer.x,
-                        y: localPlayer.y,
-                        vx: localPlayer.dx * bSpeed,
-                        vy: localPlayer.dy * bSpeed,
-                        color: localPlayer.color
-                    };
-
-                    bullets.push({ ...bulletData, owner: 'local' });
+                    let bData = { x: localPlayer.x, y: localPlayer.y, vx: localPlayer.dx * 8, vy: localPlayer.dy * 8, color: localPlayer.color };
+                    bullets.push({ ...bData, owner: 'local' });
                     lastShot = now;
-
-                    // Envoyer le tir à l'autre joueur
-                    conn.send({ type: 'SHOOT', ...bulletData });
+                    conn.send({ type: 'SHOOT', ...bData });
                 }
             }
 
-            // Envoyer notre position et vie en continu à l'adversaire
-            conn.send({
-                type: 'SYNC',
-                x: localPlayer.x,
-                y: localPlayer.y,
-                dx: localPlayer.dx,
-                dy: localPlayer.dy,
-                hp: localPlayer.hp
-            });
+            conn.send({ type: 'SYNC', x: localPlayer.x, y: localPlayer.y, dx: localPlayer.dx, dy: localPlayer.dy, hp: localPlayer.hp, dashing: localPlayer.dashing });
         }
 
-        function checkVisualCollision(obj1, obj2, dist) {
-            let dx = obj1.x - obj2.x;
-            let dy = obj1.y - obj2.y;
-            return Math.sqrt(dx*dx + dy*dy) < dist;
+        function createParticles(x, y, color) {
+            for(let i=0; i<10; i++) {
+                particles.push({ x: x, y: y, vx: (Math.random()-0.5)*6, vy: (Math.random()-0.5)*6, r: Math.random()*3+1, alpha: 1, color: color });
+            }
         }
 
         function update() {
             if (gameOver) return;
-
             updateLocalPlayer();
 
-            // Mise à jour des projectiles
+            // Particules
+            particles.forEach((p, idx) => {
+                p.x += p.vx; p.y += p.vy; p.alpha -= 0.04;
+                if(p.alpha <= 0) particles.splice(idx, 1);
+            });
+
+            // Projectiles & Hits
             for (let i = bullets.length - 1; i >= 0; i--) {
-                let b = bullets[i];
-                b.x += b.vx;
-                b.y += b.vy;
+                let b = bullets[i]; b.x += b.vx; b.y += b.vy;
 
-                // Destruction si mur ou bord touché
                 if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height || checkObstacleCollision(b.x, b.y, 4)) {
-                    bullets.splice(i, 1);
-                    continue;
+                    bullets.splice(i, 1); continue;
                 }
 
-                // Si une balle ADVERSAIRE touche notre personnage local
-                if (b.owner === 'remote' && checkVisualCollision(b, localPlayer, localPlayer.size)) {
-                    localPlayer.hp -= 10;
+                let distToMe = Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y);
+                if (b.owner === 'remote' && distToMe < localPlayer.size) {
+                    localPlayer.hp -= 8;
+                    createParticles(b.x, b.y, localPlayer.color);
+                    conn.send({ type: 'HIT', x: b.x, y: b.y, color: localPlayer.color });
                     bullets.splice(i, 1);
                     updateHPBars();
-                    
-                    if (localPlayer.hp <= 0) {
-                        endGame("Dommage... Tu as perdu ! ❌");
-                    }
-                    continue;
+                    if (localPlayer.hp <= 0) endGame("Dommage... Défaite ! 💀");
                 }
             }
 
-            // Gestion de la collecte des Bonus de vie
+            // Bonus Soins
             for (let i = items.length - 1; i >= 0; i--) {
-                let item = items[i];
-                if (checkVisualCollision(localPlayer, item, localPlayer.size + item.size)) {
-                    localPlayer.hp = Math.min(100, localPlayer.hp + 25);
+                if (Math.hypot(localPlayer.x - items[i].x, localPlayer.y - items[i].y) < localPlayer.size + 10) {
+                    localPlayer.hp = Math.min(100, localPlayer.hp + 20);
                     updateHPBars();
-                    
-                    // Notifier l'autre que le bonus a disparu
-                    conn.send({ type: 'ITEM_PICK', id: item.id });
                     items.splice(i, 1);
+                    if(isHost) conn.send({ type: 'ITEM', items: items });
                 }
             }
 
-            // Vérifier si l'adversaire est mort
-            if (remotePlayer.hp <= 0) {
-                endGame("Victoire ! Tu as gagné ! 🏆");
-            }
+            if (remotePlayer.hp <= 0) endGame("Victoire Éclatante ! 🏆");
         }
 
         function updateHPBars() {
@@ -383,56 +475,74 @@
             document.getElementById('hp-p2').style.width = Math.max(0, p2.hp) + '%';
         }
 
+        // --- INFRASTRUCTURE GRAPHISME NEON ---
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#090a0f';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Obstacles
-            ctx.fillStyle = '#4a5568';
-            for (let obs of obstacles) {
+            // Grille de fond subtile style Tron
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+            ctx.lineWidth = 1;
+            for(let x=0; x<canvas.width; x+=30) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
+            for(let y=0; y<canvas.height; y+=30) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+
+            // Dessiner Murs Néon
+            obstacles.forEach(obs => {
+                ctx.shadowBlur = 15; ctx.shadowColor = obs.color;
+                ctx.fillStyle = 'rgba(189, 16, 224, 0.2)';
                 ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                ctx.strokeStyle = '#718096';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = obs.color; ctx.lineWidth = 2;
                 ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
-            }
+            });
+            ctx.shadowBlur = 0; // Reset ombre
 
-            // Soins
-            for (let item of items) {
-                ctx.fillStyle = '#38a169';
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(item.x - 2, item.y - 7, 4, 14);
-                ctx.fillRect(item.x - 7, item.y - 2, 14, 4);
-            }
+            // Items Soins Lumineux
+            items.forEach(item => {
+                ctx.shadowBlur = 10; ctx.shadowColor = '#39ff14';
+                ctx.fillStyle = '#39ff14';
+                ctx.beginPath(); ctx.arc(item.x, item.y, 8, 0, Math.PI*2); ctx.fill();
+            });
+            ctx.shadowBlur = 0;
 
-            // Balles
-            for (let b of bullets) {
+            // Projectiles Traînée Néon
+            bullets.forEach(b => {
                 ctx.fillStyle = b.color;
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
-                ctx.fill();
-            }
+                ctx.beginPath(); ctx.arc(b.x, b.y, 4, 0, Math.PI*2); ctx.fill();
+            });
 
-            // Personnages
-            drawCharacter(p1);
-            drawCharacter(p2);
+            // Particules d'impacts
+            particles.forEach(p => {
+                ctx.fillStyle = `rgba(${p.color === '#00f2fe' ? '0,242,254' : '255,8,68'}, ${p.alpha})`;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+            });
+
+            // Joueurs
+            drawPlayer(p1);
+            drawPlayer(p2);
         }
 
-        function drawCharacter(p) {
+        function drawPlayer(p) {
             if (p.hp <= 0) return;
-            ctx.fillStyle = p.color;
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.fill();
+            
+            // Effet d'ombre de mouvement si Dash actif
+            ctx.shadowBlur = p.dashing > 0 ? 25 : 12;
+            ctx.shadowColor = p.color;
 
-            // Regard
-            let eyeX = p.x + p.dx * 8;
-            let eyeY = p.y + p.dy * 8;
-            ctx.fillStyle = '#fff';
+            // Corps principal
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Cœur du joueur (Blanc brillant)
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2); ctx.fill();
+
+            // Viseur directionnel néon
+            ctx.strokeStyle = p.color; ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + p.dx * 26, p.y + p.dy * 26);
+            ctx.stroke();
         }
 
         function endGame(text) {
