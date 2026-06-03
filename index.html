@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Combat d'Arène - 2 Joueurs</title>
+    <title>Arène Multi-joueurs (2 Appareils)</title>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,25 +19,47 @@
             overflow: hidden;
         }
 
-        h1 {
-            margin-bottom: 5px;
-            font-size: 2rem;
-            color: #e2e8f0;
-        }
-
-        .controls-info {
-            display: flex;
-            gap: 40px;
-            margin-bottom: 15px;
+        .menu-container {
+            text-align: center;
             background: #2d3748;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             border: 1px solid #4a5568;
         }
 
-        .player1-info { color: #63b3ed; }
-        .player2-info { color: #fc8181; }
+        .connection-box {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #1a202c;
+            border-radius: 8px;
+            border: 1px solid #4a5568;
+        }
+
+        input {
+            padding: 10px;
+            font-size: 1rem;
+            width: 220px;
+            border: 1px solid #cbd5e1;
+            border-radius: 5px;
+            background: #2d3748;
+            color: white;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #2b6cb0; }
+
+        /* Zone de jeu masquée au début */
+        #game-zone { display: none; text-align: center; }
 
         canvas {
             background-color: #2d3748;
@@ -60,125 +83,175 @@
             border: 2px solid #718096;
         }
 
-        .hp-bar {
-            height: 20px;
-            width: 100%;
-            transition: width 0.1s ease;
-        }
-
+        .hp-bar { height: 20px; width: 100%; transition: width 0.1s ease; }
         #hp-p1 { background-color: #3182ce; }
         #hp-p2 { background-color: #e53e3e; }
 
         .winner-screen {
             display: none;
             position: absolute;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             top: 0; left: 0; width: 100%; height: 100%;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 10;
         }
-
-        .winner-text {
-            font-size: 3rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .btn-restart {
-            padding: 12px 30px;
-            font-size: 1.2rem;
-            background-color: #38a169;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .btn-restart:hover { background-color: #2f855a; }
+        .winner-text { font-size: 3rem; font-weight: bold; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
-    <h1>Arène des Sorciers</h1>
-
-    <div class="controls-info">
-        <div class="player1-info"><strong>Joueur Bleu :</strong> ZQSD (ou WASD) pour bouger | <strong>ESPACE</strong> pour tirer</div>
-        <div class="player2-info"><strong>Joueur Rouge :</strong> Flèches pour bouger | <strong>ENTRÉE</strong> pour tirer</div>
-    </div>
-
-    <div id="ui">
-        <div>
-            <div>Joueur Bleu</div>
-            <div class="hp-bar-container"><div id="hp-p1" class="hp-bar"></div></div>
+    <div id="setup-zone" class="menu-container">
+        <h1>Arène En Ligne 🌐</h1>
+        <div class="connection-box">
+            <p><strong>Étape 1 :</strong> Envoie ce code à ton ami :</p>
+            <h2 id="my-id" style="color: #63b3ed;">Génération du code...</h2>
         </div>
-        <div>
-            <div>Joueur Rouge</div>
-            <div class="hp-bar-container"><div id="hp-p2" class="hp-bar"></div></div>
+        <div class="connection-box">
+            <p><strong>Étape 2 :</strong> Ou colle le code de ton ami :</p>
+            <input type="text" id="friend-id-input" placeholder="Coller le code ici">
+            <button onclick="connectToFriend()">Rejoindre la partie</button>
         </div>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div id="game-zone">
+        <div id="ui">
+            <div>
+                <div id="name-p1" style="font-weight: bold; color: #63b3ed;">Joueur Bleu (P1)</div>
+                <div class="hp-bar-container"><div id="hp-p1" class="hp-bar"></div></div>
+            </div>
+            <div id="role-indicator" style="font-size: 1.2rem; align-self: center; color: #a0aec0;">Connexion réussie !</div>
+            <div>
+                <div id="name-p2" style="font-weight: bold; color: #fc8181;">Joueur Rouge (P2)</div>
+                <div class="hp-bar-container"><div id="hp-p2" class="hp-bar"></div></div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+    </div>
 
     <div class="winner-screen" id="winnerScreen">
-        <div class="winner-text" id="winnerText">Le Joueur Bleu Gagne !</div>
-        <button class="btn-restart" onclick="resetGame()">Rejouer</button>
+        <div class="winner-text" id="winnerText">Fin de la partie</div>
+        <button onclick="location.reload()">Recommencer une connexion</button>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Gestion du clavier (permet d'appuyer sur plusieurs touches en même temps)
+        // Réseau PeerJS
+        let peer = new Peer();
+        let conn = null;
+        let isHost = false; // Le créateur est l'hôte (Bleu), le rejoignant est l'invité (Rouge)
+
+        // Gestion du clavier
         const keys = {};
         window.addEventListener('keydown', e => keys[e.code] = true);
         window.addEventListener('keyup', e => keys[e.code] = false);
 
-        // Configuration des obstacles (murs)
+        // Données du jeu
         const obstacles = [
             { x: 200, y: 150, w: 40, h: 200 },
             { x: 560, y: 150, w: 40, h: 200 },
             { x: 350, y: 220, w: 100, h: 60 }
         ];
 
-        // Variables des joueurs
-        let p1, p2, bullets, items, gameOver;
+        let p1 = { x: 80, y: 250, size: 24, color: '#3182ce', dx: 1, dy: 0, hp: 100 };
+        let p2 = { x: 720, y: 250, size: 24, color: '#e53e3e', dx: -1, dy: 0, hp: 100 };
+        
+        let localPlayer, remotePlayer;
+        let bullets = [];
+        let items = [];
+        let gameOver = false;
+        let lastShot = 0;
+        const shotCooldown = 300; // ms
 
-        function init() {
-            p1 = {
-                x: 80, y: 250, size: 24, color: '#3182ce', eyeColor: '#fff',
-                speed: 4, hp: 100, maxHp: 100,
-                dx: 1, dy: 0, // direction du regard
-                lastShot: 0, shotCooldown: 300 // ms
-            };
+        // --- GESTION DU RÉSEAU (PEERJS) ---
 
-            p2 = {
-                x: 720, y: 250, size: 24, color: '#e53e3e', eyeColor: '#fff',
-                speed: 4, hp: 100, maxHp: 100,
-                dx: -1, dy: 0,
-                lastShot: 0, shotCooldown: 300
-            };
+        peer.on('open', (id) => {
+            document.getElementById('my-id').innerText = id;
+        });
 
-            bullets = [];
-            items = []; // Bonus médicaux
-            gameOver = false;
-            document.getElementById('winnerScreen').style.display = 'none';
-            updateHPBars();
+        // Cas 1 : Quelqu'un se connecte à moi (Je suis l'Hôte - P1 Bleu)
+        peer.on('connection', (connection) => {
+            conn = connection;
+            isHost = true;
+            localPlayer = p1;
+            remotePlayer = p2;
+            setupGame();
+        });
+
+        // Cas 2 : Je me connecte à quelqu'un (Je suis l'Invité - P2 Rouge)
+        function connectToFriend() {
+            const friendId = document.getElementById('friend-id-input').value.trim();
+            if(!friendId) return alert("Code invalide");
+            
+            conn = peer.connect(friendId);
+            isHost = false;
+            localPlayer = p2;
+            remotePlayer = p1;
+
+            conn.on('open', () => {
+                setupGame();
+            });
         }
 
-        // Système d'apparition des bonus de vie
-        setInterval(() => {
-            if (gameOver || items.length >= 2) return;
-            // Génère une position aléatoire hors des murs
-            let itemX, itemY;
-            do {
-                itemX = Math.random() * (canvas.width - 60) + 30;
-                itemY = Math.random() * (canvas.height - 60) + 30;
-            } while (checkObstacleCollision(itemX, itemY, 15));
+        function setupGame() {
+            document.getElementById('setup-zone').style.display = 'none';
+            document.getElementById('game-zone').style.display = 'block';
+            document.getElementById('role-indicator').innerText = isHost ? "Tu es BLEU 🔵" : "Tu es ROUGE 🔴";
+            
+            if(isHost) {
+                document.getElementById('name-p1').innerText = "Joueur Bleu (TOI)";
+            } else {
+                document.getElementById('name-p2').innerText = "Joueur Rouge (TOI)";
+            }
 
-            items.push({ x: itemX, y: itemY, size: 12 });
-        }, 7000); // Toutes les 7 secondes
+            // Écoute des données reçues de l'autre joueur
+            conn.on('data', (data) => {
+                if (data.type === 'SYNC') {
+                    remotePlayer.x = data.x;
+                    remotePlayer.y = data.y;
+                    remotePlayer.dx = data.dx;
+                    remotePlayer.dy = data.dy;
+                    remotePlayer.hp = data.hp;
+                    updateHPBars();
+                } 
+                else if (data.type === 'SHOOT') {
+                    bullets.push({ x: data.x, y: data.y, vx: data.vx, vy: data.vy, color: data.color, owner: 'remote' });
+                }
+                else if (data.type === 'ITEM_SPAWN') {
+                    items.push({ x: data.x, y: data.y, size: 12, id: data.id });
+                }
+                else if (data.type === 'ITEM_PICK') {
+                    items = items.filter(item => item.id !== data.id);
+                }
+            });
+
+            // Lancement de la boucle de jeu
+            gameLoop();
+
+            // L'Hôte gère l'apparition des bonus médicaux toutes les 7 secondes
+            if (isHost) {
+                setInterval(() => {
+                    if (gameOver || items.length >= 2) return;
+                    let itemX, itemY;
+                    do {
+                        itemX = Math.random() * (canvas.width - 60) + 30;
+                        itemY = Math.random() * (canvas.height - 60) + 30;
+                    } while (checkObstacleCollision(itemX, itemY, 15));
+
+                    let itemId = Date.now();
+                    items.push({ x: itemX, y: itemY, size: 12, id: itemId });
+                    
+                    // On envoie le bonus généré à l'invité
+                    conn.send({ type: 'ITEM_SPAWN', x: itemX, y: itemY, id: itemId });
+                }, 7000);
+            }
+        }
+
+        // --- MÉCANIQUES DE JEU ---
 
         function checkObstacleCollision(x, y, size) {
             for (let obs of obstacles) {
@@ -190,56 +263,64 @@
             return false;
         }
 
-        function movePlayer(player, upKey, downKey, leftKey, rightKey) {
+        function updateLocalPlayer() {
             let moveX = 0;
             let moveY = 0;
+            let speed = 4;
 
-            if (keys[upKey]) moveY = -1;
-            if (keys[downKey]) moveY = 1;
-            if (keys[leftKey]) moveX = -1;
-            if (keys[rightKey]) moveX = 1;
+            // Supporte ZQSD, WASD et les Flèches directionnelles pour le joueur local
+            if (keys['KeyW'] || keys['KeyZ'] || keys['ArrowUp']) moveY = -1;
+            if (keys['KeyS'] || keys['ArrowDown']) moveY = 1;
+            if (keys['KeyA'] || keys['KeyQ'] || keys['ArrowLeft']) moveX = -1;
+            if (keys['KeyD'] || keys['ArrowRight']) moveX = 1;
 
-            // Si déplacement, on met à jour la direction du tir
             if (moveX !== 0 || moveY !== 0) {
-                player.dx = moveX;
-                player.dy = moveY;
+                localPlayer.dx = moveX;
+                localPlayer.dy = moveY;
             }
 
-            // Test déplacement X
-            player.x += moveX * player.speed;
-            if (player.x - player.size < 0 || player.x + player.size > canvas.width || checkObstacleCollision(player.x, player.y, player.size)) {
-                player.x -= moveX * player.speed; // Annule
+            // Déplacement X + Collision
+            localPlayer.x += moveX * speed;
+            if (localPlayer.x - localPlayer.size < 0 || localPlayer.x + localPlayer.size > canvas.width || checkObstacleCollision(localPlayer.x, localPlayer.y, localPlayer.size)) {
+                localPlayer.x -= moveX * speed;
             }
 
-            // Test déplacement Y
-            player.y += moveY * player.speed;
-            if (player.y - player.size < 0 || player.y + player.size > canvas.height || checkObstacleCollision(player.x, player.y, player.size)) {
-                player.y -= moveY * player.speed; // Annule
+            // Déplacement Y + Collision
+            localPlayer.y += moveY * speed;
+            if (localPlayer.y - localPlayer.size < 0 || localPlayer.y + localPlayer.size > canvas.height || checkObstacleCollision(localPlayer.x, localPlayer.y, localPlayer.size)) {
+                localPlayer.y -= moveY * speed;
             }
-        }
 
-        function shoot(player, shootKey) {
-            if (keys[shootKey]) {
+            // Gestion du tir local
+            if (keys['Space'] || keys['Enter']) {
                 const now = Date.now();
-                if (now - player.lastShot > player.shotCooldown) {
-                    // Calcul de la vitesse de la balle
+                if (now - lastShot > shotCooldown) {
                     let bSpeed = 7;
-                    bullets.push({
-                        x: player.x,
-                        y: player.y,
-                        vx: player.dx * bSpeed,
-                        vy: player.dy * bSpeed,
-                        color: player.color,
-                        owner: player
-                    });
-                    player.lastShot = now;
+                    let bulletData = {
+                        x: localPlayer.x,
+                        y: localPlayer.y,
+                        vx: localPlayer.dx * bSpeed,
+                        vy: localPlayer.dy * bSpeed,
+                        color: localPlayer.color
+                    };
+
+                    bullets.push({ ...bulletData, owner: 'local' });
+                    lastShot = now;
+
+                    // Envoyer le tir à l'autre joueur
+                    conn.send({ type: 'SHOOT', ...bulletData });
                 }
             }
-        }
 
-        function updateHPBars() {
-            document.getElementById('hp-p1').style.width = Math.max(0, p1.hp) + '%';
-            document.getElementById('hp-p2').style.width = Math.max(0, p2.hp) + '%';
+            // Envoyer notre position et vie en continu à l'adversaire
+            conn.send({
+                type: 'SYNC',
+                x: localPlayer.x,
+                y: localPlayer.y,
+                dx: localPlayer.dx,
+                dy: localPlayer.dy,
+                hp: localPlayer.hp
+            });
         }
 
         function checkVisualCollision(obj1, obj2, dist) {
@@ -251,13 +332,7 @@
         function update() {
             if (gameOver) return;
 
-            // Mouvements P1 (Prend en compte ZQSD ou WASD pour les claviers FR/EN)
-            movePlayer(p1, (keys['KeyW'] ? 'KeyW' : 'KeyZ'), (keys['KeyS'] ? 'KeyS' : 'KeyS'), (keys['KeyA'] ? 'KeyA' : 'KeyQ'), 'KeyD');
-            shoot(p1, 'Space');
-
-            // Mouvements P2
-            movePlayer(p2, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight');
-            shoot(p2, 'Enter');
+            updateLocalPlayer();
 
             // Mise à jour des projectiles
             for (let i = bullets.length - 1; i >= 0; i--) {
@@ -265,100 +340,96 @@
                 b.x += b.vx;
                 b.y += b.vy;
 
-                // Collision avec les bords ou les obstacles
+                // Destruction si mur ou bord touché
                 if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height || checkObstacleCollision(b.x, b.y, 4)) {
                     bullets.splice(i, 1);
                     continue;
                 }
 
-                // Collision avec Joueur 1
-                if (b.owner !== p1 && checkVisualCollision(b, p1, p1.size)) {
-                    p1.hp -= 10;
+                // Si une balle ADVERSAIRE touche notre personnage local
+                if (b.owner === 'remote' && checkVisualCollision(b, localPlayer, localPlayer.size)) {
+                    localPlayer.hp -= 10;
                     bullets.splice(i, 1);
                     updateHPBars();
-                    if (p1.hp <= 0) endGame("Le Joueur Rouge (P2) Gagne ! 🏆");
-                    continue;
-                }
-
-                // Collision avec Joueur 2
-                if (b.owner !== p2 && checkVisualCollision(b, p2, p2.size)) {
-                    p2.hp -= 10;
-                    bullets.splice(i, 1);
-                    updateHPBars();
-                    if (p2.hp <= 0) endGame("Le Joueur Bleu (P1) Gagne ! 🏆");
+                    
+                    if (localPlayer.hp <= 0) {
+                        endGame("Dommage... Tu as perdu ! ❌");
+                    }
                     continue;
                 }
             }
 
-            // Ramasser les Bonus médicaux
+            // Gestion de la collecte des Bonus de vie
             for (let i = items.length - 1; i >= 0; i--) {
                 let item = items[i];
-                if (checkVisualCollision(p1, item, p1.size + item.size)) {
-                    p1.hp = Math.min(p1.maxHp, p1.hp + 25);
-                    items.splice(i, 1);
+                if (checkVisualCollision(localPlayer, item, localPlayer.size + item.size)) {
+                    localPlayer.hp = Math.min(100, localPlayer.hp + 25);
                     updateHPBars();
-                } else if (checkVisualCollision(p2, item, p2.size + item.size)) {
-                    p2.hp = Math.min(p2.maxHp, p2.hp + 25);
+                    
+                    // Notifier l'autre que le bonus a disparu
+                    conn.send({ type: 'ITEM_PICK', id: item.id });
                     items.splice(i, 1);
-                    updateHPBars();
                 }
+            }
+
+            // Vérifier si l'adversaire est mort
+            if (remotePlayer.hp <= 0) {
+                endGame("Victoire ! Tu as gagné ! 🏆");
             }
         }
 
+        function updateHPBars() {
+            document.getElementById('hp-p1').style.width = Math.max(0, p1.hp) + '%';
+            document.getElementById('hp-p2').style.width = Math.max(0, p2.hp) + '%';
+        }
+
         function draw() {
-            // Nettoyer le canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Dessiner les obstacles
+            // Obstacles
             ctx.fillStyle = '#4a5568';
             for (let obs of obstacles) {
                 ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                // Effet de bordure sur les blocs
                 ctx.strokeStyle = '#718096';
                 ctx.lineWidth = 2;
                 ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
             }
 
-            // Dessiner les Bonus médicaux (Soins)
+            // Soins
             for (let item of items) {
                 ctx.fillStyle = '#38a169';
                 ctx.beginPath();
                 ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
                 ctx.fill();
-                // Croix blanche à l'intérieur
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(item.x - 2, item.y - 7, 4, 14);
                 ctx.fillRect(item.x - 7, item.y - 2, 14, 4);
             }
 
-            // Dessiner les projectiles
-            for (let b = 0; b < bullets.length; b++) {
-                ctx.fillStyle = bullets[b].color;
-                ctx.shadowColor = bullets[b].color;
-                ctx.shadowBlur = 8;
+            // Balles
+            for (let b of bullets) {
+                ctx.fillStyle = b.color;
                 ctx.beginPath();
-                ctx.arc(bullets[b].x, bullets[b].y, 5, 0, Math.PI * 2);
+                ctx.arc(b.x, b.y, 5, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.shadowBlur = 0; // Reset ombre
             }
 
-            // Dessiner Joueur 1 (Bleu)
+            // Personnages
             drawCharacter(p1);
-
-            // Dessiner Joueur 2 (Rouge)
             drawCharacter(p2);
         }
 
         function drawCharacter(p) {
+            if (p.hp <= 0) return;
             ctx.fillStyle = p.color;
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
 
-            // Dessiner les yeux pour voir où le personnage regarde
+            // Regard
             let eyeX = p.x + p.dx * 8;
             let eyeY = p.y + p.dy * 8;
-            ctx.fillStyle = p.eyeColor;
+            ctx.fillStyle = '#fff';
             ctx.beginPath();
             ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
             ctx.fill();
@@ -370,20 +441,11 @@
             document.getElementById('winnerScreen').style.display = 'flex';
         }
 
-        function resetGame() {
-            init();
-        }
-
-        // Boucle principale du jeu (Game Loop)
         function gameLoop() {
             update();
             draw();
             requestAnimationFrame(gameLoop);
         }
-
-        // Lancement initial
-        init();
-        gameLoop();
     </script>
 </body>
 </html>
