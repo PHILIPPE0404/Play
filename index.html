@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combat d'Arène - 2 Joueurs</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a202c;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin-bottom: 5px;
+            font-size: 2rem;
+            color: #e2e8f0;
+        }
+
+        .controls-info {
+            display: flex;
+            gap: 40px;
+            margin-bottom: 15px;
+            background: #2d3748;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            border: 1px solid #4a5568;
+        }
+
+        .player1-info { color: #63b3ed; }
+        .player2-info { color: #fc8181; }
+
+        canvas {
+            background-color: #2d3748;
+            border: 4px solid #4a5568;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        #ui {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-bottom: 10px;
+        }
+
+        .hp-bar-container {
+            width: 250px;
+            background-color: #4a5568;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 2px solid #718096;
+        }
+
+        .hp-bar {
+            height: 20px;
+            width: 100%;
+            transition: width 0.1s ease;
+        }
+
+        #hp-p1 { background-color: #3182ce; }
+        #hp-p2 { background-color: #e53e3e; }
+
+        .winner-screen {
+            display: none;
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            top: 0; left: 0; width: 100%; height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .winner-text {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .btn-restart {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            background-color: #38a169;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-restart:hover { background-color: #2f855a; }
+    </style>
+</head>
+<body>
+
+    <h1>Arène des Sorciers</h1>
+
+    <div class="controls-info">
+        <div class="player1-info"><strong>Joueur Bleu :</strong> ZQSD (ou WASD) pour bouger | <strong>ESPACE</strong> pour tirer</div>
+        <div class="player2-info"><strong>Joueur Rouge :</strong> Flèches pour bouger | <strong>ENTRÉE</strong> pour tirer</div>
+    </div>
+
+    <div id="ui">
+        <div>
+            <div>Joueur Bleu</div>
+            <div class="hp-bar-container"><div id="hp-p1" class="hp-bar"></div></div>
+        </div>
+        <div>
+            <div>Joueur Rouge</div>
+            <div class="hp-bar-container"><div id="hp-p2" class="hp-bar"></div></div>
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+    <div class="winner-screen" id="winnerScreen">
+        <div class="winner-text" id="winnerText">Le Joueur Bleu Gagne !</div>
+        <button class="btn-restart" onclick="resetGame()">Rejouer</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Gestion du clavier (permet d'appuyer sur plusieurs touches en même temps)
+        const keys = {};
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        // Configuration des obstacles (murs)
+        const obstacles = [
+            { x: 200, y: 150, w: 40, h: 200 },
+            { x: 560, y: 150, w: 40, h: 200 },
+            { x: 350, y: 220, w: 100, h: 60 }
+        ];
+
+        // Variables des joueurs
+        let p1, p2, bullets, items, gameOver;
+
+        function init() {
+            p1 = {
+                x: 80, y: 250, size: 24, color: '#3182ce', eyeColor: '#fff',
+                speed: 4, hp: 100, maxHp: 100,
+                dx: 1, dy: 0, // direction du regard
+                lastShot: 0, shotCooldown: 300 // ms
+            };
+
+            p2 = {
+                x: 720, y: 250, size: 24, color: '#e53e3e', eyeColor: '#fff',
+                speed: 4, hp: 100, maxHp: 100,
+                dx: -1, dy: 0,
+                lastShot: 0, shotCooldown: 300
+            };
+
+            bullets = [];
+            items = []; // Bonus médicaux
+            gameOver = false;
+            document.getElementById('winnerScreen').style.display = 'none';
+            updateHPBars();
+        }
+
+        // Système d'apparition des bonus de vie
+        setInterval(() => {
+            if (gameOver || items.length >= 2) return;
+            // Génère une position aléatoire hors des murs
+            let itemX, itemY;
+            do {
+                itemX = Math.random() * (canvas.width - 60) + 30;
+                itemY = Math.random() * (canvas.height - 60) + 30;
+            } while (checkObstacleCollision(itemX, itemY, 15));
+
+            items.push({ x: itemX, y: itemY, size: 12 });
+        }, 7000); // Toutes les 7 secondes
+
+        function checkObstacleCollision(x, y, size) {
+            for (let obs of obstacles) {
+                if (x + size > obs.x && x - size < obs.x + obs.w &&
+                    y + size > obs.y && y - size < obs.y + obs.h) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function movePlayer(player, upKey, downKey, leftKey, rightKey) {
+            let moveX = 0;
+            let moveY = 0;
+
+            if (keys[upKey]) moveY = -1;
+            if (keys[downKey]) moveY = 1;
+            if (keys[leftKey]) moveX = -1;
+            if (keys[rightKey]) moveX = 1;
+
+            // Si déplacement, on met à jour la direction du tir
+            if (moveX !== 0 || moveY !== 0) {
+                player.dx = moveX;
+                player.dy = moveY;
+            }
+
+            // Test déplacement X
+            player.x += moveX * player.speed;
+            if (player.x - player.size < 0 || player.x + player.size > canvas.width || checkObstacleCollision(player.x, player.y, player.size)) {
+                player.x -= moveX * player.speed; // Annule
+            }
+
+            // Test déplacement Y
+            player.y += moveY * player.speed;
+            if (player.y - player.size < 0 || player.y + player.size > canvas.height || checkObstacleCollision(player.x, player.y, player.size)) {
+                player.y -= moveY * player.speed; // Annule
+            }
+        }
+
+        function shoot(player, shootKey) {
+            if (keys[shootKey]) {
+                const now = Date.now();
+                if (now - player.lastShot > player.shotCooldown) {
+                    // Calcul de la vitesse de la balle
+                    let bSpeed = 7;
+                    bullets.push({
+                        x: player.x,
+                        y: player.y,
+                        vx: player.dx * bSpeed,
+                        vy: player.dy * bSpeed,
+                        color: player.color,
+                        owner: player
+                    });
+                    player.lastShot = now;
+                }
+            }
+        }
+
+        function updateHPBars() {
+            document.getElementById('hp-p1').style.width = Math.max(0, p1.hp) + '%';
+            document.getElementById('hp-p2').style.width = Math.max(0, p2.hp) + '%';
+        }
+
+        function checkVisualCollision(obj1, obj2, dist) {
+            let dx = obj1.x - obj2.x;
+            let dy = obj1.y - obj2.y;
+            return Math.sqrt(dx*dx + dy*dy) < dist;
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Mouvements P1 (Prend en compte ZQSD ou WASD pour les claviers FR/EN)
+            movePlayer(p1, (keys['KeyW'] ? 'KeyW' : 'KeyZ'), (keys['KeyS'] ? 'KeyS' : 'KeyS'), (keys['KeyA'] ? 'KeyA' : 'KeyQ'), 'KeyD');
+            shoot(p1, 'Space');
+
+            // Mouvements P2
+            movePlayer(p2, 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight');
+            shoot(p2, 'Enter');
+
+            // Mise à jour des projectiles
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                let b = bullets[i];
+                b.x += b.vx;
+                b.y += b.vy;
+
+                // Collision avec les bords ou les obstacles
+                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height || checkObstacleCollision(b.x, b.y, 4)) {
+                    bullets.splice(i, 1);
+                    continue;
+                }
+
+                // Collision avec Joueur 1
+                if (b.owner !== p1 && checkVisualCollision(b, p1, p1.size)) {
+                    p1.hp -= 10;
+                    bullets.splice(i, 1);
+                    updateHPBars();
+                    if (p1.hp <= 0) endGame("Le Joueur Rouge (P2) Gagne ! 🏆");
+                    continue;
+                }
+
+                // Collision avec Joueur 2
+                if (b.owner !== p2 && checkVisualCollision(b, p2, p2.size)) {
+                    p2.hp -= 10;
+                    bullets.splice(i, 1);
+                    updateHPBars();
+                    if (p2.hp <= 0) endGame("Le Joueur Bleu (P1) Gagne ! 🏆");
+                    continue;
+                }
+            }
+
+            // Ramasser les Bonus médicaux
+            for (let i = items.length - 1; i >= 0; i--) {
+                let item = items[i];
+                if (checkVisualCollision(p1, item, p1.size + item.size)) {
+                    p1.hp = Math.min(p1.maxHp, p1.hp + 25);
+                    items.splice(i, 1);
+                    updateHPBars();
+                } else if (checkVisualCollision(p2, item, p2.size + item.size)) {
+                    p2.hp = Math.min(p2.maxHp, p2.hp + 25);
+                    items.splice(i, 1);
+                    updateHPBars();
+                }
+            }
+        }
+
+        function draw() {
+            // Nettoyer le canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Dessiner les obstacles
+            ctx.fillStyle = '#4a5568';
+            for (let obs of obstacles) {
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                // Effet de bordure sur les blocs
+                ctx.strokeStyle = '#718096';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+            }
+
+            // Dessiner les Bonus médicaux (Soins)
+            for (let item of items) {
+                ctx.fillStyle = '#38a169';
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                ctx.fill();
+                // Croix blanche à l'intérieur
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(item.x - 2, item.y - 7, 4, 14);
+                ctx.fillRect(item.x - 7, item.y - 2, 14, 4);
+            }
+
+            // Dessiner les projectiles
+            for (let b = 0; b < bullets.length; b++) {
+                ctx.fillStyle = bullets[b].color;
+                ctx.shadowColor = bullets[b].color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(bullets[b].x, bullets[b].y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0; // Reset ombre
+            }
+
+            // Dessiner Joueur 1 (Bleu)
+            drawCharacter(p1);
+
+            // Dessiner Joueur 2 (Rouge)
+            drawCharacter(p2);
+        }
+
+        function drawCharacter(p) {
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dessiner les yeux pour voir où le personnage regarde
+            let eyeX = p.x + p.dx * 8;
+            let eyeY = p.y + p.dy * 8;
+            ctx.fillStyle = p.eyeColor;
+            ctx.beginPath();
+            ctx.arc(eyeX, eyeY, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function endGame(text) {
+            gameOver = true;
+            document.getElementById('winnerText').innerText = text;
+            document.getElementById('winnerScreen').style.display = 'flex';
+        }
+
+        function resetGame() {
+            init();
+        }
+
+        // Boucle principale du jeu (Game Loop)
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Lancement initial
+        init();
+        gameLoop();
+    </script>
+</body>
+</html>
