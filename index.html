@@ -2,72 +2,76 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pixel Arena - Multi-joueurs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pixel Arena Deluxe</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; image-rendering: pixelated; }
         
-        /* Suppression totale des barres de défilement */
+        /* BLOCAGE ABSOLU DU SCROLL ET DES BARRES */
         html, body {
-            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden !important; position: fixed; top: 0; left: 0;
             font-family: 'Press Start 2P', monospace; background-color: #0b0b10; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            touch-action: none;
+            touch-action: none; -webkit-overflow-scrolling: none;
         }
 
-        /* Menu de connexion Pixel */
+        /* Menu Connexion */
         .menu-container {
-            text-align: center; background: #181824; padding: 25px;
-            border: 6px solid #fff; box-shadow: 8px 8px 0 #000;
-            width: 360px; max-width: 95%;
+            text-align: center; background: #181824; padding: 20px;
+            border: 6px solid #fff; box-shadow: 6px 6px 0 #000;
+            width: 340px; max-width: 95%; z-index: 10;
         }
-        h1 { margin-top: 0; color: #3871e0; font-size: 1rem; line-height: 1.4; text-transform: uppercase; }
-        .connection-box { margin-bottom: 15px; padding: 12px; background: #242436; border: 4px solid #4d4d6a; }
-        p { font-size: 0.6rem; line-height: 1.5; }
+        h1 { margin-top: 0; color: #3871e0; font-size: 0.9rem; line-height: 1.4; }
+        .connection-box { margin-bottom: 12px; padding: 10px; background: #242436; border: 4px solid #4d4d6a; }
+        p { font-size: 0.55rem; margin: 4px 0; color: #aaa; }
+        
+        /* Bouton copier mini */
+        .btn-copy {
+            margin-top: 6px; padding: 6px 12px; font-size: 0.5rem; 
+            background: #4d4d6a; border: 3px solid #fff; color: #fff; 
+            box-shadow: 2px 2px 0 #000; cursor: pointer; display: inline-block;
+        }
+        .btn-copy:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #000; }
+
         input {
-            padding: 10px; font-size: 0.7rem; width: 100%; border: 4px solid #4d4d6a;
-            background: #0b0b10; color: white; text-align: center; margin-bottom: 10px;
+            padding: 8px; font-size: 0.65rem; width: 100%; border: 4px solid #4d4d6a;
+            background: #0b0b10; color: white; text-align: center; margin-bottom: 8px;
             font-family: 'Press Start 2P', monospace;
         }
         input:focus { border-color: #3871e0; outline: none; }
-        button {
-            padding: 12px; font-size: 0.7rem; background: #3871e0; color: #fff;
+        
+        button.main-btn {
+            padding: 10px; font-size: 0.65rem; background: #3871e0; color: #fff;
             border: 4px solid #fff; box-shadow: 4px 4px 0 #1d3b75; cursor: pointer;
             font-family: 'Press Start 2P', monospace; width: 100%; font-weight: bold;
         }
-        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1d3b75; }
 
-        /* Interface du jeu */
-        #game-zone { display: none; width: 100%; max-width: 800px; padding: 5px; position: relative; }
-        #ui {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
-            background: #181824; padding: 10px; border: 4px solid #fff;
-        }
-        .hp-container { display: flex; flex-direction: column; gap: 4px; }
-        .hp-bar-container { width: 140px; background-color: #4d4d6a; border: 3px solid #000; height: 18px; }
-        .hp-bar { height: 100%; width: 100%; transition: width 0.1s; }
-        
-        /* Brawl Stars Style: Toi toujours Bleu, l'autre toujours Rouge */
+        /* Cadre de Jeu Adaptatif */
+        #game-zone { display: none; width: 100vw; height: 100vh; max-width: 850px; max-height: 550px; padding: 8px; position: relative; }
+        #ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; background: #181824; padding: 8px; border: 4px solid #fff; }
+        .hp-container { display: flex; flex-direction: column; gap: 2px; }
+        .hp-bar-container { width: 120px; background-color: #4d4d6a; border: 3px solid #000; height: 16px; }
+        .hp-bar { height: 100%; width: 100%; }
         .local-bar { background: #3871e0; }
         .remote-bar { background: #e03838; }
-        #role-indicator { font-size: 0.5rem; color: #f4b41b; text-align: center; }
+        #role-indicator { font-size: 0.45rem; color: #f4b41b; }
 
-        .canvas-container { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 6px solid #fff; box-shadow: 6px 6px 0 #000; overflow: hidden; }
+        .canvas-container { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 6px solid #fff; box-shadow: 5px 5px 0 #000; overflow: hidden; background: #000; }
         canvas { width: 100%; height: 100%; display: block; }
 
-        /* Contrôles tactiles Mobile */
-        #mobile-controls { display: none; position: absolute; bottom: 15px; left: 0; width: 100%; padding: 0 20px; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
-        .joystick-zone { width: 90px; height: 90px; background: rgba(0,0,0,0.4); border: 4px solid rgba(255,255,255,0.4); position: relative; pointer-events: auto; }
-        .joystick-stick { width: 36px; height: 36px; background: #3871e0; border: 3px solid #fff; position: absolute; top: 23px; left: 23px; }
-        .action-buttons { display: flex; gap: 10px; pointer-events: auto; }
-        .action-btn { width: 55px; height: 55px; border: 4px solid #fff; color: white; font-size: 0.5rem; display: flex; align-items: center; justify-content: center; background: #181824; box-shadow: 3px 3px 0 #000; }
+        /* Joysticks mobiles ajustés pour ne jamais dépasser */
+        #mobile-controls { display: none; position: absolute; bottom: 12px; left: 0; width: 100%; padding: 0 20px; justify-content: space-between; align-items: center; pointer-events: none; z-index: 15; }
+        .joystick-zone { width: 84px; height: 84px; background: rgba(0,0,0,0.5); border: 4px solid rgba(255,255,255,0.4); position: relative; pointer-events: auto; }
+        .joystick-stick { width: 32px; height: 32px; background: #3871e0; border: 3px solid #fff; position: absolute; top: 23px; left: 23px; }
+        .action-buttons { display: flex; gap: 8px; pointer-events: auto; }
+        .action-btn { width: 50px; height: 50px; border: 4px solid #fff; color: white; font-size: 0.45rem; display: flex; align-items: center; justify-content: center; background: #181824; box-shadow: 2px 2px 0 #000; }
         #btn-shoot { background: #3871e0; } #btn-dash { background: #e0a938; }
 
-        /* Écran de fin */
-        .winner-screen { display: none; position: absolute; background: rgba(11, 11, 16, 0.95); top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .winner-text { font-size: 1.2rem; margin-bottom: 25px; text-align: center; line-height: 1.6; }
+        .winner-screen { display: none; position: absolute; background: rgba(11, 11, 16, 0.95); top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
+        .winner-text { font-size: 1rem; margin-bottom: 20px; text-align: center; }
     </style>
 </head>
 <body>
@@ -75,25 +79,26 @@
     <div id="setup-zone" class="menu-container">
         <h1>PIXEL ARENA 🌐</h1>
         <div class="connection-box">
-            <p style="margin:0 0 8px 0; color:#aaa;">CODE À DONNER :</p>
-            <h2 id="my-id" style="color:#3871e0; margin:0; font-size:0.7rem; word-break:break-all;">CHARGEMENT...</h2>
+            <p>TON CODE DE COMBAT :</p>
+            <h2 id="my-id" style="color:#3871e0; margin:5px 0; font-size:0.65rem; word-break:break-all;">...</h2>
+            <div id="btn-copy" class="btn-copy" onclick="copyMyCode()">COPIER</div>
         </div>
         <div class="connection-box">
-            <p style="margin:0 0 8px 0; color:#aaa;">REJOINDRE UN AMI :</p>
+            <p>REJOINDRE UN ADVERSAIRE :</p>
             <input type="text" id="friend-id-input" placeholder="COLLER LE CODE">
-            <button onclick="connectToFriend()">COMBAT !</button>
+            <button class="main-btn" onclick="connectToFriend()">READY !</button>
         </div>
     </div>
 
     <div id="game-zone">
         <div id="ui">
             <div class="hp-container">
-                <div style="font-size:0.5rem; color:#3871e0;">TOI (BLEU)</div>
+                <div style="font-size:0.45rem; color:#3871e0;">TOI (BLEU)</div>
                 <div class="hp-bar-container"><div id="hp-local" class="hp-bar local-bar"></div></div>
             </div>
-            <div id="role-indicator">CHARGEMENT MAP...</div>
+            <div id="role-indicator">MAP...</div>
             <div class="hp-container" style="align-items: flex-end;">
-                <div style="font-size:0.5rem; color:#e03838;">ENNEMI (ROUGE)</div>
+                <div style="font-size:0.45rem; color:#e03838;">ENNEMI (ROUGE)</div>
                 <div class="hp-bar-container"><div id="hp-remote" class="hp-bar remote-bar"></div></div>
             </div>
         </div>
@@ -102,7 +107,7 @@
             <canvas id="gameCanvas" width="800" height="450"></canvas>
             <div class="winner-screen" id="winnerScreen">
                 <div class="winner-text" id="winnerText">FIN</div>
-                <button onclick="location.reload()" style="width:auto; padding: 10px 20px;">REJOUER</button>
+                <button class="main-btn" onclick="location.reload()" style="width:auto; padding: 8px 16px;">REJOUER</button>
             </div>
         </div>
 
@@ -118,7 +123,7 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = false; // Force le rendu Pixel précis
+        ctx.imageSmoothingEnabled = false;
 
         let peer = new Peer(), conn = null, isHost = false;
         const keys = {};
@@ -129,33 +134,57 @@
             document.getElementById('mobile-controls').style.display = 'flex';
         }
 
-        // --- BANQUE DE 5 MAPS PIXEL UNIQUE ---
+        // --- FONCTION DE COPIE ---
+        function copyMyCode() {
+            const codeEl = document.getElementById('my-id');
+            const btn = document.getElementById('btn-copy');
+            if(codeEl.innerText && codeEl.innerText !== "...") {
+                navigator.clipboard.writeText(codeEl.innerText).then(() => {
+                    btn.innerText = "COPIÉ !";
+                    btn.style.background = "#3871e0";
+                    setTimeout(() => { btn.innerText = "COPIER"; btn.style.background = "#4d4d6a"; }, 1500);
+                });
+            }
+        }
+
+        // --- BANQUE DE 5 MAPS RICHES EN DETAILS (Types d'obstacles : 'brick', 'crate', 'bush', 'iron') ---
         const maps = [
-            { name: "LES PILIERS", obstacles: [{x:180, y:80, w:40, h:290}, {x:580, y:80, w:40, h:290}, {x:360, y:195, w:80, h:60}], bg: '#1a1c2c', obsColor: '#3c242c', floorColor: '#24273a' },
-            { name: "CENTRE CRUCIAL", obstacles: [{x:340, y:125, w:120, h:200}, {x:100, y:60, w:80, h:40}, {x:620, y:350, w:80, h:40}], bg: '#121216', obsColor: '#2c3e50', floorColor: '#1a1a24' },
-            { name: "LES 4 BLOCS", obstacles: [{x:160, y:80, w:60, h:60}, {x:160, y:310, w:60, h:60}, {x:580, y:80, w:60, h:60}, {x:580, y:310, w:60, h:60}], bg: '#1f2e2e', obsColor: '#4d6666', floorColor: '#293d3d' },
-            { name: "LABYRINTHE H", obstacles: [{x:120, y:120, w:220, h:30}, {x:460, y:300, w:220, h:30}, {x:380, y:60, w:40, h:120}, {x:380, y:270, w:40, h:120}], bg: '#2d3a22', obsColor: '#1e2714', floorColor: '#354328' },
-            { name: "LIGNES CROISÉES", obstacles: [{x:250, y:0, w:40, h:160}, {x:510, y:290, w:40, h:160}, {x:250, y:290, w:40, h:160}, {x:510, y:0, w:40, h:160}], bg: '#2b1b3d', obsColor: '#4a154b', floorColor: '#34224a' }
+            { name: "TEMPLE BRICK", bg: '#1a1c2c', floorColor: '#24273a', obstacles: [
+                {x:180, y:80, w:40, h:290, type:'brick'}, {x:580, y:80, w:40, h:290, type:'brick'}, {x:360, y:195, w:80, h:60, type:'iron'}
+            ], decor: [{x:100,y:100,t:1}, {x:700,y:350,t:1}, {x:400,y:80,t:2}] },
+            
+            { name: "HANGAR DES CAISSES", bg: '#1c120c', floorColor: '#2d1e15', obstacles: [
+                {x:340, y:125, w:120, h:200, type:'crate'}, {x:100, y:60, w:80, h:40, type:'crate'}, {x:620, y:350, w:80, h:40, type:'crate'}
+            ], decor: [{x:250,y:300,t:2}, {x:550,y:100,t:2}] },
+            
+            { name: "JUNGLE PIX", bg: '#132415', floorColor: '#1d3620', obstacles: [
+                {x:160, y:80, w:60, h:60, type:'bush'}, {x:160, y:310, w:60, h:60, type:'bush'}, {x:580, y:80, w:60, h:60, type:'bush'}, {x:580, y:310, w:60, h:60, type:'bush'}
+            ], decor: [{x:390,y:120,t:1}, {x:390,y:310,t:1}] },
+            
+            { name: " bunker h-core ", bg: '#202028', floorColor: '#2a2a35', obstacles: [
+                {x:120, y:120, w:220, h:30, type:'iron'}, {x:460, y:300, w:220, h:30, type:'iron'}, {x:380, y:60, w:40, h:120, type:'brick'}, {x:380, y:270, w:40, h:120, type:'brick'}
+            ], decor: [{x:70,y:380,t:2}, {x:710,y:50,t:2}] },
+            
+            { name: "CROSS LAB", bg: '#1b1224', floorColor: '#281c36', obstacles: [
+                {x:250, y:0, w:40, h:160, type:'crate'}, {x:510, y:290, w:40, h:160, type:'crate'}, {x:250, y:290, w:40, h:160, type:'bush'}, {x:510, y:0, w:40, h:160, type:'bush'}
+            ], decor: [{x:400,y:220,t:1}] }
         ];
         let currentMap = maps[0];
 
-        // Joueurs logiques (p1=Hôte, p2=Invité)
-        let p1 = { x: 90, y: 225, size: 16, dx: 1, dy: 0, hp: 100, dashing: 0 };
-        let p2 = { x: 710, y: 225, size: 16, dx: -1, dy: 0, hp: 100, dashing: 0 };
+        let p1 = { x: 90, y: 225, size: 15, dx: 1, dy: 0, hp: 100, dashing: 0 };
+        let p2 = { x: 710, y: 225, size: 15, dx: -1, dy: 0, hp: 100, dashing: 0 };
         let localPlayer, remotePlayer, bullets = [], items = [], particles = [], gameOver = false, lastShot = 0, lastDash = 0;
-        
-        // Correction Bug PV : 10 dégâts propres pour éviter les résidus à 1 PV
         const dmgValue = 10, shotCooldown = 250, dashCooldown = 1500;
 
-        // Joystick Mobile
-        let joyActive = false, joyStart = { x: 0, y: 0 }, joyZone = document.getElementById('joyZone'), joyStick = document.getElementById('joyStick'), maxRadius = 30;
+        // Joystick Tactile Réglé
+        let joyActive = false, joyStart = { x: 0, y: 0 }, joyZone = document.getElementById('joyZone'), joyStick = document.getElementById('joyStick'), maxRadius = 26;
         joyZone.addEventListener('touchstart', e => { joyActive = true; const rect = joyZone.getBoundingClientRect(); joyStart = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 }; });
         window.addEventListener('touchmove', e => {
             if (!joyActive) return; const touch = Array.from(e.touches).find(t => t.target === joyZone || joyZone.contains(t.target)); if (!touch) return;
             let distX = touch.clientX - joyStart.x, distY = touch.clientY - joyStart.y; let dist = Math.hypot(distX, distY);
             if (dist > maxRadius) { distX = (distX / dist) * maxRadius; distY = (distY / dist) * maxRadius; dist = maxRadius; }
             joyStick.style.transform = `translate(${distX}px, ${distY}px)`;
-            if (dist > 8) { localPlayer.dx = distX / dist; localPlayer.dy = distY / dist; localPlayer.isMovingTouch = true; }
+            if (dist > 6) { localPlayer.dx = distX / dist; localPlayer.dy = distY / dist; localPlayer.isMovingTouch = true; }
         });
         window.addEventListener('touchend', () => { joyActive = false; joyStick.style.transform = 'translate(0px, 0px)'; if(localPlayer) localPlayer.isMovingTouch = false; });
 
@@ -163,41 +192,29 @@
         document.getElementById('btn-shoot').addEventListener('touchend', () => { window.isActionShooting = false; });
         document.getElementById('btn-dash').addEventListener('touchstart', () => { triggerDash(); });
 
-        // --- RESEAU & SYNCHRONISATION MAP ---
+        // --- NETCODE ---
         peer.on('open', id => document.getElementById('my-id').innerText = id);
-        
-        // L'Hôte reçoit une connexion
         peer.on('connection', connection => {
             conn = connection; isHost = true; localPlayer = p1; remotePlayer = p2;
-            
-            // Échange initial robuste pour s'accorder sur la même MAP choisie au hasard
             conn.on('data', data => {
-                if (data.type === 'READY_TO_JOIN') {
-                    let mapIndex = Math.floor(Math.random() * maps.length);
-                    currentMap = maps[mapIndex];
-                    conn.send({ type: 'MAP_SELECT', index: mapIndex });
-                    setupGame();
-                } else { handleGameTraffic(data); }
+                if (data.type === 'READY') {
+                    let rIdx = Math.floor(Math.random() * maps.length); currentMap = maps[rIdx];
+                    conn.send({ type: 'MAP_CHOSEN', index: rIdx }); setupGame();
+                } else handleTraffic(data);
             });
         });
         
-        // L'Invité initie la connexion
         function connectToFriend() {
             const fId = document.getElementById('friend-id-input').value.trim(); if(!fId) return;
             conn = peer.connect(fId); isHost = false; localPlayer = p2; remotePlayer = p1;
-            
-            conn.on('open', () => {
-                conn.send({ type: 'READY_TO_JOIN' }); // Demande la map à l'hôte
-            });
+            conn.on('open', () => conn.send({ type: 'READY' }));
             conn.on('data', data => {
-                if (data.type === 'MAP_SELECT') {
-                    currentMap = maps[data.index];
-                    setupGame();
-                } else { handleGameTraffic(data); }
+                if (data.type === 'MAP_CHOSEN') { currentMap = maps[data.index]; setupGame(); }
+                else handleTraffic(data);
             });
         }
 
-        function handleGameTraffic(data) {
+        function handleTraffic(data) {
             if (data.type === 'SYNC') {
                 remotePlayer.x = data.x; remotePlayer.y = data.y; remotePlayer.dx = data.dx; remotePlayer.dy = data.dy; remotePlayer.hp = data.hp; remotePlayer.dashing = data.dashing; updateHPBars();
             } else if (data.type === 'SHOOT') {
@@ -209,33 +226,32 @@
         function setupGame() {
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('game-zone').style.display = 'block';
-            document.getElementById('role-indicator').innerText = "MAP : " + currentMap.name;
+            document.getElementById('role-indicator').innerText = currentMap.name;
             updateHPBars();
-
             if (isHost) {
                 setInterval(() => {
                     if (gameOver || items.length >= 1) return;
-                    let rx = Math.random() * 700 + 50, ry = Math.random() * 350 + 50;
-                    if (!checkObstacleCollision(rx, ry, 15)) { items.push({ x: rx, y: ry }); conn.send({ type: 'ITEM', items: items }); }
-                }, 7000);
+                    let rx = Math.random() * 660 + 70, ry = Math.random() * 310 + 70;
+                    if (!checkCollision(rx, ry, 15)) { items.push({ x: rx, y: ry }); conn.send({ type: 'ITEM', items: items }); }
+                }, 6500);
             }
             gameLoop();
         }
 
-        // --- MECANIQUES DE JEU ---
-        function checkObstacleCollision(x, y, size) {
+        // --- MECHANICS ---
+        function checkCollision(x, y, size) {
             for (let obs of currentMap.obstacles) { if (x + size > obs.x && x - size < obs.x + obs.w && y + size > obs.y && y - size < obs.y + obs.h) return true; }
             return false;
         }
 
         function triggerDash() {
             const now = Date.now();
-            if (now - lastDash > dashCooldown && !localPlayer.dashing) { localPlayer.dashing = 8; lastDash = now; }
+            if (now - lastDash > dashCooldown && !localPlayer.dashing) { localPlayer.dashing = 7; lastDash = now; }
         }
 
         function updateLocalPlayer() {
-            let mx = 0, my = 0, currentSpeed = 3.2;
-            if (localPlayer.dashing > 0) { currentSpeed = 9; localPlayer.dashing--; }
+            let mx = 0, my = 0, speed = 3.2;
+            if (localPlayer.dashing > 0) { speed = 8.5; localPlayer.dashing--; }
             
             if (keys['KeyW'] || keys['KeyZ'] || keys['ArrowUp']) my = -1;
             if (keys['KeyS'] || keys['ArrowDown']) my = 1;
@@ -247,10 +263,10 @@
             let fx = (('ontouchstart' in window) && localPlayer.isMovingTouch) ? localPlayer.dx : mx;
             let fy = (('ontouchstart' in window) && localPlayer.isMovingTouch) ? localPlayer.dy : my;
 
-            localPlayer.x += fx * currentSpeed;
-            if (localPlayer.x - localPlayer.size < 0 || localPlayer.x + localPlayer.size > canvas.width || checkObstacleCollision(localPlayer.x, localPlayer.y, localPlayer.size)) localPlayer.x -= fx * currentSpeed;
-            localPlayer.y += fy * currentSpeed;
-            if (localPlayer.y - localPlayer.size < 0 || localPlayer.y + localPlayer.size > canvas.height || checkObstacleCollision(localPlayer.x, localPlayer.y, localPlayer.size)) localPlayer.y -= fy * currentSpeed;
+            localPlayer.x += fx * speed;
+            if (localPlayer.x - localPlayer.size < 0 || localPlayer.x + localPlayer.size > canvas.width || checkCollision(localPlayer.x, localPlayer.y, localPlayer.size)) localPlayer.x -= fx * speed;
+            localPlayer.y += fy * speed;
+            if (localPlayer.y - localPlayer.size < 0 || localPlayer.y + localPlayer.size > canvas.height || checkCollision(localPlayer.x, localPlayer.y, localPlayer.size)) localPlayer.y -= fy * speed;
 
             if (keys['Space'] || keys['Enter'] || window.isActionShooting) {
                 const now = Date.now();
@@ -263,7 +279,7 @@
         }
 
         function createParticles(x, y, color) {
-            for(let i=0; i<8; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4, size: Math.random()*3+2, alpha: 1, color: color });
+            for(let i=0; i<6; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4, size: Math.random()*2+2, alpha: 1, color: color });
         }
 
         function update() {
@@ -272,10 +288,10 @@
 
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i]; b.x += b.vx; b.y += b.vy;
-                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height || checkObstacleCollision(b.x, b.y, 4)) { bullets.splice(i, 1); continue; }
+                if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height || checkCollision(b.x, b.y, 4)) { bullets.splice(i, 1); continue; }
                 
                 if (b.owner === 'remote' && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < localPlayer.size) {
-                    localPlayer.hp = Math.max(0, localPlayer.hp - dmgValue); // Dégâts propres cleans
+                    localPlayer.hp = Math.max(0, localPlayer.hp - dmgValue); // Dégâts propres de 10
                     createParticles(b.x, b.y, '#3871e0');
                     conn.send({ type: 'HIT', x: b.x, y: b.y }); bullets.splice(i, 1); updateHPBars();
                     if (localPlayer.hp <= 0) endGame("DEFAITE... K.O. 💀");
@@ -295,57 +311,94 @@
             document.getElementById('hp-remote').style.width = Math.max(0, remotePlayer.hp) + '%';
         }
 
-        // --- VISUELS STYLE PIXEL ART BRUT ---
+        // --- RENDU GRAPHIQUE PIXEL ART AVANCE ---
         function draw() {
             ctx.fillStyle = currentMap.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Sol quadrillé rétro (Pixel Art Décoration)
+            // Sol dallé rétro détaillé
             ctx.fillStyle = currentMap.floorColor;
-            for(let x=0; x<canvas.width; x+=40) { for(let y=0; y<canvas.height; y+=40) { if((x+y)%80===0) ctx.fillRect(x, y, 4, 4); } }
+            for(let x=0; x<canvas.width; x+=40) {
+                for(let y=0; y<canvas.height; y+=40) {
+                    if((x+y)%80===0) {
+                        ctx.fillRect(x, y, 38, 38); // Dalles pixelisées
+                    }
+                }
+            }
 
-            // Murs / Obstacles Rectangulaires pleins avec bordure noire
+            // Éléments de décor au sol (fissures, petites herbes)
+            currentMap.decor.forEach(d => {
+                ctx.fillStyle = 'rgba(0,0,0,0.15)';
+                if(d.t === 1) { // Touffe d'herbe rétro
+                    ctx.fillRect(d.x, d.y, 4, 8); ctx.fillRect(d.x+4, d.y+2, 4, 6);
+                } else { // Fissure au sol
+                    ctx.fillRect(d.x, d.y, 12, 3); ctx.fillRect(d.x+4, d.y+3, 3, 6);
+                }
+            });
+
+            // Dessin des Obstacles texturés Pixel Art
             currentMap.obstacles.forEach(obs => {
-                ctx.fillStyle = currentMap.obsColor; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.fillStyle = currentMap.obsColor || '#3a3a4a';
+                
+                if (obs.type === 'brick') { // Type Briques
+                    ctx.fillStyle = '#6b3c3c'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                    ctx.fillStyle = '#4a2525'; // Lignes de briques
+                    for(let yy = obs.y + 8; yy < obs.y + obs.h; yy += 12) ctx.fillRect(obs.x, yy, obs.w, 3);
+                } 
+                else if (obs.type === 'crate') { // Type Caisse en bois avec un X
+                    ctx.fillStyle = '#a06030'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                    ctx.strokeStyle = '#503010'; ctx.lineWidth = 3;
+                    ctx.strokeRect(obs.x+3, obs.y+3, obs.w-6, obs.h-6);
+                    // Lignes diagonales (le X)
+                    ctx.beginPath(); ctx.moveTo(obs.x+4, obs.y+4); ctx.lineTo(obs.x+obs.w-4, obs.y+obs.h-4);
+                    ctx.moveTo(obs.x+obs.w-4, obs.y+4); ctx.lineTo(obs.x+4, obs.y+obs.h-4); ctx.stroke();
+                } 
+                else if (obs.type === 'bush') { // Type Buisson de jungle dense
+                    ctx.fillStyle = '#1e5e2f'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                    ctx.fillStyle = '#3da35d'; // Feuilles claires
+                    for(let xx=obs.x+4; xx<obs.x+obs.w; xx+=12) ctx.fillRect(xx, obs.y+4, 6, 6);
+                } 
+                else { // Bloc de fer métallique renforcé
+                    ctx.fillStyle = '#737385'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                    ctx.fillStyle = '#b0b0bf'; ctx.fillRect(obs.x+2, obs.y+2, obs.w-4, 4);
+                }
+                
+                // Contour noir d'arcade général pour l'obstacle
                 ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
             });
 
-            // Kit Médical Pixel (Carré vert avec croix blanche)
+            // Kit Médical Soins Pixel
             items.forEach(item => {
                 ctx.fillStyle = '#39ff14'; ctx.fillRect(item.x-8, item.y-8, 16, 16);
                 ctx.fillStyle = '#fff'; ctx.fillRect(item.x-2, item.y-6, 4, 12); ctx.fillRect(item.x-6, item.y-2, 12, 4);
                 ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(item.x-8, item.y-8, 16, 16);
             });
 
-            // Projectiles en pixel carrés (Bleu ou Rouge)
+            // Projectiles en pixel carrés
             bullets.forEach(b => {
                 ctx.fillStyle = b.owner === 'local' ? '#3871e0' : '#e03838';
                 ctx.fillRect(b.x-4, b.y-4, 8, 8);
-                ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(b.x-4, b.y-4, 8, 8);
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(b.x-4, b.y-4, 8, 8);
             });
 
             // Éclats de particules pixelisées
-            particles.forEach(p => {
-                ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
-            });
+            particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
 
-            // Dessin des Joueurs en Carrés Pixels
-            drawPixelPlayer(localPlayer, '#3871e0'); // Toi : Toujours Bleu
-            drawPixelPlayer(remotePlayer, '#e03838'); // L'autre : Toujours Rouge
+            // Rendu des joueurs Carrés Brawl Stars
+            drawPixelPlayer(localPlayer, '#3871e0');  // Toi toujours BLEU
+            drawPixelPlayer(remotePlayer, '#e03838'); // Ennemi toujours ROUGE
         }
 
         function drawPixelPlayer(p, color) {
             if (p.hp <= 0) return;
-            
-            // Effet fantôme pixelisé si Dash actif
-            if(p.dashing > 0) { ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(p.x-p.size-4, p.y-p.size-4, p.size*2+8, p.size*2+8); }
+            if(p.dashing > 0) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(p.x-p.size-3, p.y-p.size-3, p.size*2+6, p.size*2+6); }
 
-            // Corps carré
             ctx.fillStyle = color; ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
             ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
 
-            // Viseur Pixel directionnel (petit point noir/blanc à l'avant du carré)
-            ctx.fillStyle = '#fff'; ctx.fillRect(p.x + p.dx * 10 - 3, p.y + p.dy * 10 - 3, 6, 6);
-            ctx.fillStyle = '#000'; ctx.fillRect(p.x + p.dx * 10 - 1, p.y + p.dy * 10 - 1, 2, 2);
+            // Yeux Pixelisés pour donner une orientation au personnage
+            ctx.fillStyle = '#fff';
+            let ex = p.x + p.dx * 6, ey = p.y + p.dy * 6;
+            ctx.fillRect(ex - 4, ey - 2, 3, 3); ctx.fillRect(ex + 1, ey - 2, 3, 3);
         }
 
         function endGame(text) { gameOver = true; document.getElementById('winnerText').innerText = text; document.getElementById('winnerScreen').style.display = 'flex'; }
