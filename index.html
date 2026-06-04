@@ -3,74 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cyber Arena Neon - Multi-joueurs</title>
+    <title>Pixel Arena - Multi-joueurs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
-        body {
-            font-family: 'Segoe UI', Roboto, sans-serif; background-color: #0d0e15; color: #fff;
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; image-rendering: pixelated; }
+        
+        /* Suppression totale des barres de défilement */
+        html, body {
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
+            font-family: 'Press Start 2P', monospace; background-color: #0b0b10; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 100vh; margin: 0; overflow: hidden; touch-action: none;
+            touch-action: none;
         }
+
+        /* Menu de connexion Pixel */
         .menu-container {
-            text-align: center; background: #131722; padding: 30px; border-radius: 16px;
-            box-shadow: 0 0 20px rgba(0, 242, 254, 0.2); border: 1px solid #00f2fe; width: 350px; max-width: 90%;
+            text-align: center; background: #181824; padding: 25px;
+            border: 6px solid #fff; box-shadow: 8px 8px 0 #000;
+            width: 360px; max-width: 95%;
         }
-        .connection-box { margin-bottom: 15px; padding: 15px; background: #1c2030; border-radius: 8px; border: 1px solid #2c3248; }
-        input { padding: 12px; font-size: 1rem; width: 100%; border: 1px solid #2c3248; border-radius: 8px; background: #0d0e15; color: white; text-align: center; margin-bottom: 10px; }
-        input:focus { border-color: #00f2fe; outline: none; }
-        button { padding: 12px 24px; font-size: 1rem; background: linear-gradient(45deg, #00f2fe, #4facfe); color: #0d0e15; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; }
-        #game-zone { display: none; width: 100%; max-width: 800px; padding: 10px; position: relative; }
-        #ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: rgba(13, 23, 34, 0.8); padding: 10px; border-radius: 8px; border: 1px solid #2c3248; }
-        .hp-bar-container { width: 120px; background-color: #1c2030; border-radius: 20px; overflow: hidden; border: 1px solid #4a5568; height: 14px; margin-top: 4px; }
-        .hp-bar { height: 100%; width: 100%; transition: width 0.2s; }
-        #hp-p1 { background: linear-gradient(90deg, #00f2fe, #4facfe); box-shadow: 0 0 8px #00f2fe; }
-        #hp-p2 { background: linear-gradient(90deg, #ff0844, #ffb199); box-shadow: 0 0 8px #ff0844; }
-        .canvas-container { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #090a0f; border-radius: 12px; border: 2px solid #2c3248; overflow: hidden; }
+        h1 { margin-top: 0; color: #3871e0; font-size: 1rem; line-height: 1.4; text-transform: uppercase; }
+        .connection-box { margin-bottom: 15px; padding: 12px; background: #242436; border: 4px solid #4d4d6a; }
+        p { font-size: 0.6rem; line-height: 1.5; }
+        input {
+            padding: 10px; font-size: 0.7rem; width: 100%; border: 4px solid #4d4d6a;
+            background: #0b0b10; color: white; text-align: center; margin-bottom: 10px;
+            font-family: 'Press Start 2P', monospace;
+        }
+        input:focus { border-color: #3871e0; outline: none; }
+        button {
+            padding: 12px; font-size: 0.7rem; background: #3871e0; color: #fff;
+            border: 4px solid #fff; box-shadow: 4px 4px 0 #1d3b75; cursor: pointer;
+            font-family: 'Press Start 2P', monospace; width: 100%; font-weight: bold;
+        }
+        button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #1d3b75; }
+
+        /* Interface du jeu */
+        #game-zone { display: none; width: 100%; max-width: 800px; padding: 5px; position: relative; }
+        #ui {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+            background: #181824; padding: 10px; border: 4px solid #fff;
+        }
+        .hp-container { display: flex; flex-direction: column; gap: 4px; }
+        .hp-bar-container { width: 140px; background-color: #4d4d6a; border: 3px solid #000; height: 18px; }
+        .hp-bar { height: 100%; width: 100%; transition: width 0.1s; }
+        
+        /* Brawl Stars Style: Toi toujours Bleu, l'autre toujours Rouge */
+        .local-bar { background: #3871e0; }
+        .remote-bar { background: #e03838; }
+        #role-indicator { font-size: 0.5rem; color: #f4b41b; text-align: center; }
+
+        .canvas-container { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 6px solid #fff; box-shadow: 6px 6px 0 #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
-        #mobile-controls { display: none; position: absolute; bottom: 20px; left: 0; width: 100%; padding: 0 30px; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
-        .joystick-zone { width: 100px; height: 100px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 50%; position: relative; pointer-events: auto; }
-        .joystick-stick { width: 40px; height: 40px; background: rgba(0, 242, 254, 0.6); border: 2px solid #00f2fe; border-radius: 50%; position: absolute; top: 28px; left: 28px; box-shadow: 0 0 10px #00f2fe; }
-        .action-buttons { display: flex; gap: 15px; pointer-events: auto; }
-        .action-btn { width: 55px; height: 55px; border-radius: 50%; border: 2px solid; color: white; font-weight: bold; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; background: rgba(19, 23, 34, 0.8); }
-        #btn-shoot { border-color: #00f2fe; } #btn-dash { border-color: #ffb199; }
-        .winner-screen { display: none; position: absolute; background: rgba(13, 14, 21, 0.95); top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .winner-text { font-size: 2.5rem; font-weight: bold; margin-bottom: 20px; text-align: center; }
+
+        /* Contrôles tactiles Mobile */
+        #mobile-controls { display: none; position: absolute; bottom: 15px; left: 0; width: 100%; padding: 0 20px; justify-content: space-between; align-items: center; pointer-events: none; z-index: 5; }
+        .joystick-zone { width: 90px; height: 90px; background: rgba(0,0,0,0.4); border: 4px solid rgba(255,255,255,0.4); position: relative; pointer-events: auto; }
+        .joystick-stick { width: 36px; height: 36px; background: #3871e0; border: 3px solid #fff; position: absolute; top: 23px; left: 23px; }
+        .action-buttons { display: flex; gap: 10px; pointer-events: auto; }
+        .action-btn { width: 55px; height: 55px; border: 4px solid #fff; color: white; font-size: 0.5rem; display: flex; align-items: center; justify-content: center; background: #181824; box-shadow: 3px 3px 0 #000; }
+        #btn-shoot { background: #3871e0; } #btn-dash { background: #e0a938; }
+
+        /* Écran de fin */
+        .winner-screen { display: none; position: absolute; background: rgba(11, 11, 16, 0.95); top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .winner-text { font-size: 1.2rem; margin-bottom: 25px; text-align: center; line-height: 1.6; }
     </style>
 </head>
 <body>
 
     <div id="setup-zone" class="menu-container">
-        <h1>CYBER ARENA NEON 🌐</h1>
+        <h1>PIXEL ARENA 🌐</h1>
         <div class="connection-box">
-            <p style="margin:0 0 10px 0; font-size:0.9rem; color:#a0aec0;">Étape 1 : Partage ton code</p>
-            <h2 id="my-id" style="color:#00f2fe; margin:0; font-family:monospace;">Génération...</h2>
+            <p style="margin:0 0 8px 0; color:#aaa;">CODE À DONNER :</p>
+            <h2 id="my-id" style="color:#3871e0; margin:0; font-size:0.7rem; word-break:break-all;">CHARGEMENT...</h2>
         </div>
         <div class="connection-box">
-            <p style="margin:0 0 10px 0; font-size:0.9rem; color:#a0aec0;">Étape 2 : Ou rejoint ton ami</p>
-            <input type="text" id="friend-id-input" placeholder="Coller le code ici">
-            <button onclick="connectToFriend()">COMBATTRE</button>
+            <p style="margin:0 0 8px 0; color:#aaa;">REJOINDRE UN AMI :</p>
+            <input type="text" id="friend-id-input" placeholder="COLLER LE CODE">
+            <button onclick="connectToFriend()">COMBAT !</button>
         </div>
     </div>
 
     <div id="game-zone">
         <div id="ui">
-            <div>
-                <div id="name-p1" style="font-size:0.8rem; color:#00f2fe;">Bleu</div>
-                <div class="hp-bar-container"><div id="hp-p1" class="hp-bar"></div></div>
+            <div class="hp-container">
+                <div style="font-size:0.5rem; color:#3871e0;">TOI (BLEU)</div>
+                <div class="hp-bar-container"><div id="hp-local" class="hp-bar local-bar"></div></div>
             </div>
-            <div id="role-indicator">Connexion...</div>
-            <div>
-                <div id="name-p2" style="font-size:0.8rem; color:#ff0844; text-align:right;">Rouge</div>
-                <div class="hp-bar-container"><div id="hp-p2" class="hp-bar"></div></div>
+            <div id="role-indicator">CHARGEMENT MAP...</div>
+            <div class="hp-container" style="align-items: flex-end;">
+                <div style="font-size:0.5rem; color:#e03838;">ENNEMI (ROUGE)</div>
+                <div class="hp-bar-container"><div id="hp-remote" class="hp-bar remote-bar"></div></div>
             </div>
         </div>
 
         <div class="canvas-container">
             <canvas id="gameCanvas" width="800" height="450"></canvas>
             <div class="winner-screen" id="winnerScreen">
-                <div class="winner-text" id="winnerText">Gagné !</div>
-                <button onclick="location.reload()" style="width:auto;">Rejouer</button>
+                <div class="winner-text" id="winnerText">FIN</div>
+                <button onclick="location.reload()" style="width:auto; padding: 10px 20px;">REJOUER</button>
             </div>
         </div>
 
@@ -86,6 +118,8 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false; // Force le rendu Pixel précis
+
         let peer = new Peer(), conn = null, isHost = false;
         const keys = {};
         window.addEventListener('keydown', e => keys[e.code] = true);
@@ -95,32 +129,33 @@
             document.getElementById('mobile-controls').style.display = 'flex';
         }
 
-        const obstacles = [
-            { x: 180, y: 100, w: 30, h: 250, color: '#bd10e0' },
-            { x: 590, y: 100, w: 30, h: 250, color: '#bd10e0' },
-            { x: 340, y: 195, w: 120, h: 60, color: '#bd10e0' }
+        // --- BANQUE DE 5 MAPS PIXEL UNIQUE ---
+        const maps = [
+            { name: "LES PILIERS", obstacles: [{x:180, y:80, w:40, h:290}, {x:580, y:80, w:40, h:290}, {x:360, y:195, w:80, h:60}], bg: '#1a1c2c', obsColor: '#3c242c', floorColor: '#24273a' },
+            { name: "CENTRE CRUCIAL", obstacles: [{x:340, y:125, w:120, h:200}, {x:100, y:60, w:80, h:40}, {x:620, y:350, w:80, h:40}], bg: '#121216', obsColor: '#2c3e50', floorColor: '#1a1a24' },
+            { name: "LES 4 BLOCS", obstacles: [{x:160, y:80, w:60, h:60}, {x:160, y:310, w:60, h:60}, {x:580, y:80, w:60, h:60}, {x:580, y:310, w:60, h:60}], bg: '#1f2e2e', obsColor: '#4d6666', floorColor: '#293d3d' },
+            { name: "LABYRINTHE H", obstacles: [{x:120, y:120, w:220, h:30}, {x:460, y:300, w:220, h:30}, {x:380, y:60, w:40, h:120}, {x:380, y:270, w:40, h:120}], bg: '#2d3a22', obsColor: '#1e2714', floorColor: '#354328' },
+            { name: "LIGNES CROISÉES", obstacles: [{x:250, y:0, w:40, h:160}, {x:510, y:290, w:40, h:160}, {x:250, y:290, w:40, h:160}, {x:510, y:0, w:40, h:160}], bg: '#2b1b3d', obsColor: '#4a154b', floorColor: '#34224a' }
         ];
+        let currentMap = maps[0];
 
-        let p1 = { x: 100, y: 225, size: 18, color: '#00f2fe', dx: 1, dy: 0, hp: 100, dashing: 0 };
-        let p2 = { x: 700, y: 225, size: 18, color: '#ff0844', dx: -1, dy: 0, hp: 100, dashing: 0 };
+        // Joueurs logiques (p1=Hôte, p2=Invité)
+        let p1 = { x: 90, y: 225, size: 16, dx: 1, dy: 0, hp: 100, dashing: 0 };
+        let p2 = { x: 710, y: 225, size: 16, dx: -1, dy: 0, hp: 100, dashing: 0 };
         let localPlayer, remotePlayer, bullets = [], items = [], particles = [], gameOver = false, lastShot = 0, lastDash = 0;
-        const shotCooldown = 250, dashCooldown = 1500;
+        
+        // Correction Bug PV : 10 dégâts propres pour éviter les résidus à 1 PV
+        const dmgValue = 10, shotCooldown = 250, dashCooldown = 1500;
 
-        let joyActive = false, joyStart = { x: 0, y: 0 }, joyZone = document.getElementById('joyZone'), joyStick = document.getElementById('joyStick'), maxRadius = 35;
-
-        joyZone.addEventListener('touchstart', e => {
-            joyActive = true; const rect = joyZone.getBoundingClientRect();
-            joyStart = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 };
-        });
+        // Joystick Mobile
+        let joyActive = false, joyStart = { x: 0, y: 0 }, joyZone = document.getElementById('joyZone'), joyStick = document.getElementById('joyStick'), maxRadius = 30;
+        joyZone.addEventListener('touchstart', e => { joyActive = true; const rect = joyZone.getBoundingClientRect(); joyStart = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 }; });
         window.addEventListener('touchmove', e => {
-            if (!joyActive) return;
-            const touch = Array.from(e.touches).find(t => t.target === joyZone || joyZone.contains(t.target));
-            if (!touch) return;
-            let distX = touch.clientX - joyStart.x, distY = touch.clientY - joyStart.y;
-            let distance = Math.hypot(distX, distY);
-            if (distance > maxRadius) { distX = (distX / distance) * maxRadius; distY = (distY / distance) * maxRadius; distance = maxRadius; }
+            if (!joyActive) return; const touch = Array.from(e.touches).find(t => t.target === joyZone || joyZone.contains(t.target)); if (!touch) return;
+            let distX = touch.clientX - joyStart.x, distY = touch.clientY - joyStart.y; let dist = Math.hypot(distX, distY);
+            if (dist > maxRadius) { distX = (distX / dist) * maxRadius; distY = (distY / dist) * maxRadius; dist = maxRadius; }
             joyStick.style.transform = `translate(${distX}px, ${distY}px)`;
-            if (distance > 10) { localPlayer.dx = distX / distance; localPlayer.dy = distY / distance; localPlayer.isMovingTouch = true; }
+            if (dist > 8) { localPlayer.dx = distX / dist; localPlayer.dy = distY / dist; localPlayer.isMovingTouch = true; }
         });
         window.addEventListener('touchend', () => { joyActive = false; joyStick.style.transform = 'translate(0px, 0px)'; if(localPlayer) localPlayer.isMovingTouch = false; });
 
@@ -128,53 +163,80 @@
         document.getElementById('btn-shoot').addEventListener('touchend', () => { window.isActionShooting = false; });
         document.getElementById('btn-dash').addEventListener('touchstart', () => { triggerDash(); });
 
+        // --- RESEAU & SYNCHRONISATION MAP ---
         peer.on('open', id => document.getElementById('my-id').innerText = id);
-        peer.on('connection', connection => { conn = connection; isHost = true; localPlayer = p1; remotePlayer = p2; setupGame(); });
         
+        // L'Hôte reçoit une connexion
+        peer.on('connection', connection => {
+            conn = connection; isHost = true; localPlayer = p1; remotePlayer = p2;
+            
+            // Échange initial robuste pour s'accorder sur la même MAP choisie au hasard
+            conn.on('data', data => {
+                if (data.type === 'READY_TO_JOIN') {
+                    let mapIndex = Math.floor(Math.random() * maps.length);
+                    currentMap = maps[mapIndex];
+                    conn.send({ type: 'MAP_SELECT', index: mapIndex });
+                    setupGame();
+                } else { handleGameTraffic(data); }
+            });
+        });
+        
+        // L'Invité initie la connexion
         function connectToFriend() {
             const fId = document.getElementById('friend-id-input').value.trim(); if(!fId) return;
             conn = peer.connect(fId); isHost = false; localPlayer = p2; remotePlayer = p1;
-            conn.on('open', setupGame);
+            
+            conn.on('open', () => {
+                conn.send({ type: 'READY_TO_JOIN' }); // Demande la map à l'hôte
+            });
+            conn.on('data', data => {
+                if (data.type === 'MAP_SELECT') {
+                    currentMap = maps[data.index];
+                    setupGame();
+                } else { handleGameTraffic(data); }
+            });
+        }
+
+        function handleGameTraffic(data) {
+            if (data.type === 'SYNC') {
+                remotePlayer.x = data.x; remotePlayer.y = data.y; remotePlayer.dx = data.dx; remotePlayer.dy = data.dy; remotePlayer.hp = data.hp; remotePlayer.dashing = data.dashing; updateHPBars();
+            } else if (data.type === 'SHOOT') {
+                bullets.push({ x: data.x, y: data.y, vx: data.vx, vy: data.vy, owner: 'remote' });
+            } else if (data.type === 'ITEM') { items = data.items; }
+            else if (data.type === 'HIT') { createParticles(data.x, data.y, '#e03838'); }
         }
 
         function setupGame() {
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('game-zone').style.display = 'block';
-            document.getElementById('role-indicator').innerHTML = isHost ? "<span style='color:#00f2fe'>BLEU</span>" : "<span style='color:#ff0844'>ROUGE</span>";
-            if(isHost) { document.getElementById('name-p1').innerText = "Bleu (Toi)"; } else { document.getElementById('name-p2').innerText = "Rouge (Toi)"; }
-            
-            conn.on('data', data => {
-                if (data.type === 'SYNC') {
-                    remotePlayer.x = data.x; remotePlayer.y = data.y; remotePlayer.dx = data.dx; remotePlayer.dy = data.dy; remotePlayer.hp = data.hp; remotePlayer.dashing = data.dashing; updateHPBars();
-                } else if (data.type === 'SHOOT') {
-                    bullets.push({ x: data.x, y: data.y, vx: data.vx, vy: data.vy, color: data.color, owner: 'remote' });
-                } else if (data.type === 'ITEM') { items = data.items; }
-                else if (data.type === 'HIT') { createParticles(data.x, data.y, data.color); }
-            });
+            document.getElementById('role-indicator').innerText = "MAP : " + currentMap.name;
+            updateHPBars();
 
             if (isHost) {
                 setInterval(() => {
                     if (gameOver || items.length >= 1) return;
                     let rx = Math.random() * 700 + 50, ry = Math.random() * 350 + 50;
                     if (!checkObstacleCollision(rx, ry, 15)) { items.push({ x: rx, y: ry }); conn.send({ type: 'ITEM', items: items }); }
-                }, 6000);
+                }, 7000);
             }
             gameLoop();
         }
 
+        // --- MECANIQUES DE JEU ---
         function checkObstacleCollision(x, y, size) {
-            for (let obs of obstacles) { if (x + size > obs.x && x - size < obs.x + obs.w && y + size > obs.y && y - size < obs.y + obs.h) return true; }
+            for (let obs of currentMap.obstacles) { if (x + size > obs.x && x - size < obs.x + obs.w && y + size > obs.y && y - size < obs.y + obs.h) return true; }
             return false;
         }
 
         function triggerDash() {
             const now = Date.now();
-            if (now - lastDash > dashCooldown && !localPlayer.dashing) { localPlayer.dashing = 10; lastDash = now; }
+            if (now - lastDash > dashCooldown && !localPlayer.dashing) { localPlayer.dashing = 8; lastDash = now; }
         }
 
         function updateLocalPlayer() {
-            let mx = 0, my = 0, currentSpeed = 3.5;
+            let mx = 0, my = 0, currentSpeed = 3.2;
             if (localPlayer.dashing > 0) { currentSpeed = 9; localPlayer.dashing--; }
+            
             if (keys['KeyW'] || keys['KeyZ'] || keys['ArrowUp']) my = -1;
             if (keys['KeyS'] || keys['ArrowDown']) my = 1;
             if (keys['KeyA'] || keys['KeyQ'] || keys['ArrowLeft']) mx = -1;
@@ -193,7 +255,7 @@
             if (keys['Space'] || keys['Enter'] || window.isActionShooting) {
                 const now = Date.now();
                 if (now - lastShot > shotCooldown) {
-                    let bData = { x: localPlayer.x, y: localPlayer.y, vx: localPlayer.dx * 8, vy: localPlayer.dy * 8, color: localPlayer.color };
+                    let bData = { x: localPlayer.x, y: localPlayer.y, vx: localPlayer.dx * 7.5, vy: localPlayer.dy * 7.5 };
                     bullets.push({ ...bData, owner: 'local' }); lastShot = now; conn.send({ type: 'SHOOT', ...bData });
                 }
             }
@@ -201,20 +263,22 @@
         }
 
         function createParticles(x, y, color) {
-            for(let i=0; i<8; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, r: Math.random()*2+1, alpha: 1, color: color });
+            for(let i=0; i<8; i++) particles.push({ x: x, y: y, vx: (Math.random()-0.5)*4, vy: (Math.random()-0.5)*4, size: Math.random()*3+2, alpha: 1, color: color });
         }
 
         function update() {
             if (gameOver) return; updateLocalPlayer();
-            particles.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.04; if(p.alpha <= 0) particles.splice(idx, 1); });
+            particles.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.05; if(p.alpha <= 0) particles.splice(idx, 1); });
 
             for (let i = bullets.length - 1; i >= 0; i--) {
                 let b = bullets[i]; b.x += b.vx; b.y += b.vy;
                 if (b.x < 0 || b.x > canvas.width || b.y < 0 || b.y > canvas.height || checkObstacleCollision(b.x, b.y, 4)) { bullets.splice(i, 1); continue; }
+                
                 if (b.owner === 'remote' && Math.hypot(b.x - localPlayer.x, b.y - localPlayer.y) < localPlayer.size) {
-                    localPlayer.hp -= 8; createParticles(b.x, b.y, localPlayer.color);
-                    conn.send({ type: 'HIT', x: b.x, y: b.y, color: localPlayer.color }); bullets.splice(i, 1); updateHPBars();
-                    if (localPlayer.hp <= 0) endGame("Défaite... 💀");
+                    localPlayer.hp = Math.max(0, localPlayer.hp - dmgValue); // Dégâts propres cleans
+                    createParticles(b.x, b.y, '#3871e0');
+                    conn.send({ type: 'HIT', x: b.x, y: b.y }); bullets.splice(i, 1); updateHPBars();
+                    if (localPlayer.hp <= 0) endGame("DEFAITE... K.O. 💀");
                 }
             }
             for (let i = items.length - 1; i >= 0; i--) {
@@ -223,39 +287,65 @@
                     if(isHost) conn.send({ type: 'ITEM', items: items });
                 }
             }
-            if (remotePlayer.hp <= 0) endGame("Victoire ! 🏆");
+            if (remotePlayer.hp <= 0) endGame("VICTOIRE ! 🏆");
         }
 
         function updateHPBars() {
-            document.getElementById('hp-p1').style.width = Math.max(0, p1.hp) + '%';
-            document.getElementById('hp-p2').style.width = Math.max(0, p2.hp) + '%';
+            document.getElementById('hp-local').style.width = Math.max(0, localPlayer.hp) + '%';
+            document.getElementById('hp-remote').style.width = Math.max(0, remotePlayer.hp) + '%';
         }
 
+        // --- VISUELS STYLE PIXEL ART BRUT ---
         function draw() {
-            ctx.fillStyle = '#090a0f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'; ctx.lineWidth = 1;
-            for(let x=0; x<canvas.width; x+=30) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); ctx.stroke(); }
-            for(let y=0; y<canvas.height; y+=30) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); ctx.stroke(); }
+            ctx.fillStyle = currentMap.bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Sol quadrillé rétro (Pixel Art Décoration)
+            ctx.fillStyle = currentMap.floorColor;
+            for(let x=0; x<canvas.width; x+=40) { for(let y=0; y<canvas.height; y+=40) { if((x+y)%80===0) ctx.fillRect(x, y, 4, 4); } }
 
-            obstacles.forEach(obs => {
-                ctx.shadowBlur = 12; ctx.shadowColor = obs.color; ctx.fillStyle = 'rgba(189, 16, 224, 0.15)'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                ctx.strokeStyle = obs.color; ctx.lineWidth = 2; ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
+            // Murs / Obstacles Rectangulaires pleins avec bordure noire
+            currentMap.obstacles.forEach(obs => {
+                ctx.fillStyle = currentMap.obsColor; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
             });
-            ctx.shadowBlur = 0;
-            items.forEach(item => { ctx.shadowBlur = 10; ctx.shadowColor = '#39ff14'; ctx.fillStyle = '#39ff14'; ctx.beginPath(); ctx.arc(item.x, item.y, 6, 0, Math.PI*2); ctx.fill(); });
-            ctx.shadowBlur = 0;
-            bullets.forEach(b => { ctx.fillStyle = b.color; ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI*2); ctx.fill(); });
-            particles.forEach(p => { ctx.fillStyle = `rgba(${p.color === '#00f2fe' ? '0,242,254' : '255,8,68'}, ${p.alpha})`; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill(); });
 
-            drawPlayer(p1); drawPlayer(p2);
+            // Kit Médical Pixel (Carré vert avec croix blanche)
+            items.forEach(item => {
+                ctx.fillStyle = '#39ff14'; ctx.fillRect(item.x-8, item.y-8, 16, 16);
+                ctx.fillStyle = '#fff'; ctx.fillRect(item.x-2, item.y-6, 4, 12); ctx.fillRect(item.x-6, item.y-2, 12, 4);
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect(item.x-8, item.y-8, 16, 16);
+            });
+
+            // Projectiles en pixel carrés (Bleu ou Rouge)
+            bullets.forEach(b => {
+                ctx.fillStyle = b.owner === 'local' ? '#3871e0' : '#e03838';
+                ctx.fillRect(b.x-4, b.y-4, 8, 8);
+                ctx.strokeStyle = '#000'; ctx.lineWidth = 1; ctx.strokeRect(b.x-4, b.y-4, 8, 8);
+            });
+
+            // Éclats de particules pixelisées
+            particles.forEach(p => {
+                ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+            });
+
+            // Dessin des Joueurs en Carrés Pixels
+            drawPixelPlayer(localPlayer, '#3871e0'); // Toi : Toujours Bleu
+            drawPixelPlayer(remotePlayer, '#e03838'); // L'autre : Toujours Rouge
         }
 
-        function drawPlayer(p) {
+        function drawPixelPlayer(p, color) {
             if (p.hp <= 0) return;
-            ctx.shadowBlur = p.dashing > 0 ? 20 : 10; ctx.shadowColor = p.color;
-            ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(p.x, p.y, p.size * 0.4, 0, Math.PI * 2); ctx.fill();
-            ctx.strokeStyle = p.color; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p.x + p.dx * 24, p.y + p.dy * 24); ctx.stroke();
+            
+            // Effet fantôme pixelisé si Dash actif
+            if(p.dashing > 0) { ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(p.x-p.size-4, p.y-p.size-4, p.size*2+8, p.size*2+8); }
+
+            // Corps carré
+            ctx.fillStyle = color; ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+            ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
+
+            // Viseur Pixel directionnel (petit point noir/blanc à l'avant du carré)
+            ctx.fillStyle = '#fff'; ctx.fillRect(p.x + p.dx * 10 - 3, p.y + p.dy * 10 - 3, 6, 6);
+            ctx.fillStyle = '#000'; ctx.fillRect(p.x + p.dx * 10 - 1, p.y + p.dy * 10 - 1, 2, 2);
         }
 
         function endGame(text) { gameOver = true; document.getElementById('winnerText').innerText = text; document.getElementById('winnerScreen').style.display = 'flex'; }
