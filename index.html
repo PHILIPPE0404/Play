@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pixel Arena Elite - Super Fix</title>
+    <title>Pixel Arena Elite - Stable Network Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
@@ -86,7 +86,6 @@
         #role-indicator { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
         #map-name { font-size: 10px; color: #ffffff; text-align: center; margin-bottom: 4px; font-weight: bold; }
         
-        /* Bouton Abandonner Jaune */
         #btn-surrender { 
             background: #f1c40f; border: 2px solid #000; color: #000; 
             font-family: 'Press Start 2P', monospace; font-size: 8px; 
@@ -296,8 +295,9 @@
         }
 
         function initLobbyAction(hostMode) {
-            let secretCode = document.getElementById('secret-code-input').value.trim();
-            if(!secretCode) { document.getElementById('status-text').innerText = "ENTREZ UN CODE SECRET !"; return; }
+            // Nettoyage automatique du code pour éviter les caractères qui font planter PeerJS
+            let secretCode = document.getElementById('secret-code-input').value.trim().replace(/[^a-zA-Z0-9]/g, '');
+            if(!secretCode) { document.getElementById('status-text').innerText = "ENTREZ UN CODE VALIDE (CHIFFRES/LETTRES) !"; return; }
             
             let finalLobbyStringId = `pixel-arena-lobby-${selectedLobbySlot}-${secretCode}`;
             document.getElementById('status-text').innerText = "Connexion au réseau...";
@@ -306,13 +306,14 @@
                 isHost = true; localPlayer = p1; remotePlayer = p2; localPlayer.classIdx = myClassIdx;
                 peer = new Peer(finalLobbyStringId);
                 peer.on('open', () => { document.getElementById('status-text').innerText = "Salon ouvert ! En attente de ton pote..."; });
-                peer.on('error', err => { document.getElementById('status-text').innerText = "Erreur: Code déjà pris ou problème réseau."; });
+                peer.on('error', err => { document.getElementById('status-text').innerText = "Erreur salon : Code déjà pris ou réseau saturé."; });
                 peer.on('connection', connection => {
                     conn = connection;
                     conn.on('data', data => {
                         if (data.type === 'READY') {
                             let rIdx = Math.floor(Math.random() * maps.length); currentMap = maps[rIdx];
-                            conn.send({ type: 'START', mapIndex: rIdx, hostClass: myClassIdx }); setupGame();
+                            if(conn && conn.open) conn.send({ type: 'START', mapIndex: rIdx, hostClass: myClassIdx }); 
+                            setupGame();
                         } else handleTraffic(data);
                     });
                 });
@@ -321,15 +322,16 @@
                 peer = new Peer();
                 peer.on('open', () => {
                     conn = peer.connect(finalLobbyStringId);
-                    conn.on('open', () => conn.send({ type: 'READY' }));
+                    conn.on('open', () => { if(conn && conn.open) conn.send({ type: 'READY' }); });
                     conn.on('data', data => {
                         if (data.type === 'START') { 
                             currentMap = maps[data.mapIndex]; remotePlayer.classIdx = data.hostClass;
-                            conn.send({ type: 'GUEST_CLASS', guestClass: myClassIdx }); setupGame(); 
+                            if(conn && conn.open) conn.send({ type: 'GUEST_CLASS', guestClass: myClassIdx }); 
+                            setupGame(); 
                         } else handleTraffic(data);
                     });
                 });
-                peer.on('error', err => { document.getElementById('status-text').innerText = "Salon introuvable !"; });
+                peer.on('error', err => { document.getElementById('status-text').innerText = "Salon introuvable ! Re-vérifie le code."; });
             }
         }
 
@@ -343,6 +345,7 @@
         let p1 = { x: 90, y: 225, size: 15, dx: 1, dy: 0, hp: 100, shield: 0, ulti: 0, classIdx: 0, dashing: 0, ultiActive: 0 };
         let p2 = { x: 710, y: 225, size: 15, dx: -1, dy: 0, hp: 100, shield: 0, ulti: 0, classIdx: 0, dashing: 0, ultiActive: 0 };
         let localPlayer, remotePlayer, bullets = [], items = [], particles = [], gameOver = false, lastShot = 0, lastDash = 0;
+        let lastSyncTime = 0; // Pour le bridage de synchronisation réseau
         const dashCooldown = 1500;
 
         if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
@@ -366,9 +369,8 @@
         document.getElementById('btn-dash').addEventListener('touchstart', () => { triggerDash(); });
         document.getElementById('btn-ulti').addEventListener('touchstart', () => { triggerUltimate(); });
 
-        // --- SECURISE APPARITION ITEMS HORS DES MURS ---
         function isItemPosValid(x, y) {
-            let safetyMargin = 25; // Garde l'item loin des boîtes de collisions
+            let safetyMargin = 25; 
             for (let obs of currentMap.obstacles) {
                 if (x + safetyMargin > obs.x && x - safetyMargin < obs.x + obs.w &&
                     y + safetyMargin > obs.y && y - safetyMargin < obs.y + obs.h) {
@@ -378,7 +380,6 @@
             return true;
         }
 
-        // --- NETCODE & SIGNAL DE FIN ---
         function handleTraffic(data) {
             if (data.type === 'GUEST_CLASS') { remotePlayer.classIdx = data.guestClass; updateHUD(); }
             else if (data.type === 'SYNC') {
@@ -397,7 +398,6 @@
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('game-zone').style.display = 'block';
             
-            // Forçage réinitialisation absolue des positions de départ
             p1.x = 90; p1.y = 225; p1.hp = 100; p1.shield = 0; p1.ulti = 0; p1.dashing = 0; p1.ultiActive = 0;
             p2.x = 710; p2.y = 225; p2.hp = 100; p2.shield = 0; p2.ulti = 0; p2.dashing = 0; p2.ultiActive = 0;
             
@@ -418,14 +418,13 @@
                     }
                     if (valid) {
                         items.push({ x: rx, y: ry, itemType: Math.random() > 0.5 ? 'heal' : 'shield' });
-                        if(conn) conn.send({ type: 'ITEM', items: items }); 
+                        if(conn && conn.open) conn.send({ type: 'ITEM', items: items }); 
                     }
                 }, 5000);
             }
             gameLoop();
         }
 
-        // --- ABANDONNER ---
         function surrenderMatch() {
             if (confirm("Abandonner la partie et donner la victoire ?")) {
                 endGame("DÉFAITE\n(Tu as abandonné) 🏳️", true);
@@ -438,7 +437,7 @@
             document.getElementById('winnerText').innerText = text;
             document.getElementById('winnerScreen').style.display = 'flex';
             
-            if (sendToNetwork && conn) {
+            if (sendToNetwork && conn && conn.open) {
                 let reportReason = "VICTOIRE !\n(L'ennemi a abandonné) 🏆";
                 if(text.includes("K.O.")) reportReason = "VICTOIRE ! 🏆";
                 conn.send({ type: 'GAMEOVER', reason: reportReason });
@@ -504,16 +503,26 @@
                             let vx = (localPlayer.dx * Math.cos(ang) - localPlayer.dy * Math.sin(ang)) * myData.bulletSpeed;
                             let vy = (localPlayer.dx * Math.sin(ang) + localPlayer.dy * Math.cos(ang)) * myData.bulletSpeed;
                             let bData = { x: localPlayer.x, y: localPlayer.y, vx: vx, vy: vy, dmg: baseDmg };
-                            bullets.push({ ...bData, owner: 'local' }); if(conn) conn.send({ type: 'SHOOT', ...bData });
+                            bullets.push({ ...bData, owner: 'local' }); 
+                            if(conn && conn.open) conn.send({ type: 'SHOOT', ...bData });
                         });
                     } else {
                         let bData = { x: localPlayer.x, y: localPlayer.y, vx: localPlayer.dx * myData.bulletSpeed, vy: localPlayer.dy * myData.bulletSpeed, dmg: baseDmg };
-                        bullets.push({ ...bData, owner: 'local' }); if(conn) conn.send({ type: 'SHOOT', ...bData });
+                        bullets.push({ ...bData, owner: 'local' }); 
+                        if(conn && conn.open) conn.send({ type: 'SHOOT', ...bData });
                     }
                     lastShot = now;
                 }
             }
-            if(conn) conn.send({ type: 'SYNC', x: localPlayer.x, y: localPlayer.y, dx: localPlayer.dx, dy: localPlayer.dy, hp: localPlayer.hp, shield: localPlayer.shield, ulti: localPlayer.ulti, dashing: localPlayer.dashing, ultiActive: localPlayer.ultiActive });
+            
+            // --- SYNC THROTTLING CORRECTION (Évite de faire crasher PeerJS) ---
+            const currentTick = Date.now();
+            if (currentTick - lastSyncTime > 45) { // Envoi bridé à ~22 fois par seconde max au lieu de 60
+                if(conn && conn.open) {
+                    conn.send({ type: 'SYNC', x: localPlayer.x, y: localPlayer.y, dx: localPlayer.dx, dy: localPlayer.dy, hp: localPlayer.hp, shield: localPlayer.shield, ulti: localPlayer.ulti, dashing: localPlayer.dashing, ultiActive: localPlayer.ultiActive });
+                }
+                lastSyncTime = currentTick;
+            }
             updateHUD();
         }
 
@@ -538,7 +547,7 @@
                     } else { localPlayer.hp = Math.max(0, localPlayer.hp - totalDmg); }
                     
                     createParticles(b.x, b.y, '#3871e0'); 
-                    if(conn) conn.send({ type: 'HIT', x: b.x, y: b.y }); 
+                    if(conn && conn.open) conn.send({ type: 'HIT', x: b.x, y: b.y }); 
                     bullets.splice(i, 1); 
                     updateHUD();
                     
@@ -550,12 +559,12 @@
                 if (Math.hypot(localPlayer.x - items[i].x, localPlayer.y - items[i].y) < localPlayer.size + 10) {
                     if (items[i].itemType === 'shield') localPlayer.shield = Math.min(100, localPlayer.shield + 30);
                     else localPlayer.hp = Math.min(100, localPlayer.hp + 25);
-                    updateHUD(); items.splice(i, 1); if(isHost && conn) conn.send({ type: 'ITEM', items: items });
+                    updateHUD(); items.splice(i, 1); 
+                    if(isHost && conn && conn.open) conn.send({ type: 'ITEM', items: items });
                 }
             }
         }
 
-        // --- ENSEMBLE DE MISE A JOUR DU HUD EN TEMPS REEL ---
         function updateHUD() {
             if(!localPlayer || !remotePlayer) return;
             document.getElementById('local-title').innerText = "TOI (" + classes[localPlayer.classIdx].name + ")";
@@ -604,7 +613,6 @@
             if(p.ultiActive > 0) { ctx.fillStyle = 'rgba(155, 89, 182, 0.4)'; ctx.fillRect(p.x-p.size-6, p.y-p.size-6, p.size*2+12, p.size*2+12); }
             if(p.dashing > 0) { ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(p.x-p.size-3, p.y-p.size-3, p.size*2+6, p.size*2+6); }
 
-            // Utilise la bonne couleur selon sa classe réelle synchronisée
             ctx.fillStyle = p.classIdx === 0 ? '#3871e0' : (p.classIdx === 1 ? '#e67e22' : '#2ecc71');
             ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
             
