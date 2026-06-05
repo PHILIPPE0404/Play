@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pixel Arena Elite</title>
+    <title>Pixel Arena Elite - Super Fix</title>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
@@ -17,17 +17,16 @@
             touch-action: none; -webkit-overflow-scrolling: none;
         }
 
-        /* --- SUPER MENU PRINCIPAL MULTI-ONGLETS --- */
+        /* --- MENU PRINCIPAL --- */
         .menu-container {
             background: #181824; padding: 15px; border: 6px solid #fff; box-shadow: 6px 6px 0 #000;
             width: 420px; max-width: 95%; z-index: 10; max-height: 95vh; display: flex; flex-direction: column;
         }
-        h1 { margin: 0 0 10px 0; color: #3871e0; font-size: 0.8rem; text-align: center; text-shadow: 2px 2px 0 #000; }
+        h1 { margin: 0 0 10px 0; color: #3871e0; font-size: 12px; text-align: center; text-shadow: 2px 2px 0 #000; }
         
-        /* Onglets */
         .menu-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
         .tab-btn {
-            flex: 1; padding: 8px 2px; font-size: 0.45rem; background: #242436; border: 3px solid #4d4d6a;
+            flex: 1; padding: 8px 2px; font-size: 8px; background: #242436; border: 3px solid #4d4d6a;
             color: #aaa; cursor: pointer; font-family: 'Press Start 2P', monospace; font-weight: bold;
         }
         .tab-btn.active { border-color: #3871e0; background: #3871e0; color: #fff; }
@@ -36,46 +35,42 @@
         .tab-content.active { display: block; }
 
         .box { margin-bottom: 10px; padding: 10px; background: #242436; border: 4px solid #4d4d6a; text-align: center; }
-        p { font-size: 0.45rem; margin: 3px 0; color: #ccc; line-height: 1.4; }
+        p { font-size: 8px; margin: 3px 0; color: #ccc; line-height: 1.4; }
         
-        /* Onglet 1 : Profil & Skin */
         .class-select { display: flex; gap: 4px; margin-top: 8px; }
-        .class-btn { flex: 1; padding: 6px 2px; font-size: 0.4rem; background: #14141f; border: 2px solid #4d4d6a; color: #fff; font-family: 'Press Start 2P', monospace; cursor: pointer; }
+        .class-btn { flex: 1; padding: 6px 2px; font-size: 7px; background: #14141f; border: 2px solid #4d4d6a; color: #fff; font-family: 'Press Start 2P', monospace; cursor: pointer; }
         .class-btn.active { border-color: #27ae60; background: #1b3d25; }
         #skin-preview-canvas { background: #0b0b10; border: 3px solid #fff; margin-top: 8px; display: block; margin-left: auto; margin-right: auto; }
 
-        /* Onglet 2 : Lobbies */
         .lobby-list { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; }
         .lobby-row {
             display: flex; justify-content: space-between; align-items: center; padding: 6px;
-            background: #14141f; border: 2px solid #4d4d6a; font-size: 0.5rem; cursor: pointer;
+            background: #14141f; border: 2px solid #4d4d6a; font-size: 9px; cursor: pointer;
         }
         .lobby-row:hover, .lobby-row.selected { border-color: #3871e0; background: #1c273d; }
-        .lobby-status { font-size: 0.4rem; color: #27ae60; }
+        .lobby-status { font-size: 7px; color: #27ae60; }
         
         .lobby-action-zone { margin-top: 10px; border-top: 2px dashed #4d4d6a; padding-top: 8px; display: none; }
         input {
-            padding: 6px; font-size: 0.55rem; width: 100%; border: 3px solid #4d4d6a;
+            padding: 6px; font-size: 10px; width: 100%; border: 3px solid #4d4d6a;
             background: #0b0b10; color: white; text-align: center; margin-bottom: 6px; font-family: 'Press Start 2P', monospace;
         }
         .btn-side { display: flex; gap: 5px; }
 
-        /* Onglet 3 : Paramètres Touches */
-        .key-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 0.45rem; background: #14141f; padding: 5px; border: 2px solid #4d4d6a; }
-        .key-bind-btn { background: #3871e0; border: 2px solid #fff; color: white; padding: 4px 8px; font-size: 0.4rem; font-family: 'Press Start 2P', monospace; cursor: pointer; min-width: 90px; text-align: center; }
+        .key-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 8px; background: #14141f; padding: 5px; border: 2px solid #4d4d6a; }
+        .key-bind-btn { background: #3871e0; border: 2px solid #fff; color: white; padding: 4px 8px; font-size: 7px; font-family: 'Press Start 2P', monospace; cursor: pointer; min-width: 90px; text-align: center; }
 
-        /* Boutons Génériques */
         .main-btn {
-            padding: 8px; font-size: 0.55rem; background: #3871e0; color: #fff;
+            padding: 8px; font-size: 10px; background: #3871e0; color: #fff;
             border: 3px solid #fff; box-shadow: 3px 3px 0 #000; cursor: pointer;
             font-family: 'Press Start 2P', monospace; width: 100%; font-weight: bold;
         }
         .main-btn:active { transform: translate(1px,1px); box-shadow: 2px 2px 0 #000; }
 
-        /* --- HUD JEU --- */
+        /* --- HUD EN JEU --- */
         #game-zone { display: none; width: 100vw; height: 100vh; max-width: 850px; max-height: 580px; padding: 5px; position: relative; }
-        #ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; background: #181824; padding: 6px; border: 4px solid #fff; }
-        .hp-container { display: flex; flex-direction: column; gap: 2px; width: 130px; }
+        #ui { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; background: #181824; padding: 6px; border: 4px solid #fff; height: 65px; }
+        .hp-container { display: flex; flex-direction: column; gap: 2px; width: 150px; }
         .bar-border { width: 100%; background-color: #4d4d6a; border: 2px solid #000; height: 12px; position: relative; }
         .bar-fill { height: 100%; width: 100%; transition: width 0.1s; }
         .local-hp { background: #3871e0; }
@@ -83,7 +78,21 @@
         .shield-fill { background: #f1c40f; width: 0%; }
         .ulti-border { height: 8px; background: #222; border: 1px solid #000; width: 100%; }
         .ulti-fill { background: #9b59b6; height: 100%; width: 0%; }
-        #role-indicator { font-size: 0.45rem; color: #f4b41b; text-align: center; }
+        
+        #local-title, #remote-title { font-size: 8px; font-weight: bold; }
+        #local-title { color: #3871e0; }
+        #remote-title { color: #e03838; }
+
+        #role-indicator { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; }
+        #map-name { font-size: 10px; color: #ffffff; text-align: center; margin-bottom: 4px; font-weight: bold; }
+        
+        /* Bouton Abandonner Jaune */
+        #btn-surrender { 
+            background: #f1c40f; border: 2px solid #000; color: #000; 
+            font-family: 'Press Start 2P', monospace; font-size: 8px; 
+            padding: 5px 10px; cursor: pointer; box-shadow: 2px 2px 0 #000; font-weight: bold;
+        }
+        #btn-surrender:active { transform: translate(1px,1px); box-shadow: 0px 0px 0 #000; }
 
         .canvas-container { position: relative; width: 100%; aspect-ratio: 16 / 9; border: 6px solid #fff; box-shadow: 4px 4px 0 #000; overflow: hidden; }
         canvas { width: 100%; height: 100%; display: block; }
@@ -93,13 +102,13 @@
         .joystick-zone { width: 80px; height: 80px; background: rgba(0,0,0,0.5); border: 4px solid rgba(255,255,255,0.4); position: relative; pointer-events: auto; }
         .joystick-stick { width: 30px; height: 30px; background: #3871e0; border: 3px solid #fff; position: absolute; top: 21px; left: 21px; }
         .action-buttons { display: flex; gap: 6px; pointer-events: auto; align-items: center; }
-        .action-btn { width: 46px; height: 46px; border: 4px solid #fff; color: white; font-size: 0.4rem; display: flex; align-items: center; justify-content: center; background: #181824; box-shadow: 2px 2px 0 #000; font-weight: bold; }
+        .action-btn { width: 46px; height: 46px; border: 4px solid #fff; color: white; font-size: 8px; display: flex; align-items: center; justify-content: center; background: #181824; box-shadow: 2px 2px 0 #000; font-weight: bold; }
         #btn-shoot { background: #3871e0; width: 52px; height: 52px; } 
         #btn-dash { background: #e0a938; }
         #btn-ulti { background: #9b59b6; }
 
         .winner-screen { display: none; position: absolute; background: rgba(11, 11, 16, 0.95); top: 0; left: 0; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; z-index: 20; }
-        .winner-text { font-size: 0.9rem; margin-bottom: 15px; text-align: center; }
+        .winner-text { font-size: 14px; margin-bottom: 15px; text-align: center; color: #f1c40f; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -122,7 +131,7 @@
                     <button class="class-btn" id="cb-2" onclick="selectClass(2)">TANK</button>
                 </div>
                 <canvas id="skin-preview-canvas" width="80" height="80"></canvas>
-                <p id="class-desc" style="margin-top:6px; font-size:0.38rem; color:#aaa;"></p>
+                <p id="class-desc" style="margin-top:6px; font-size:7px; color:#aaa;"></p>
             </div>
             <button class="main-btn" onclick="switchTab('lobbies')">SUIVANT : TROUVER UN SALON</button>
         </div>
@@ -139,25 +148,25 @@
                 </div>
 
                 <div id="lobby-action-zone" class="lobby-action-zone">
-                    <p style="color:#fff; margin-bottom:5px;" id="lobby-title-action">SALON SELECTIONNÉ</p>
-                    <input type="text" id="secret-code-input" placeholder="CODE SECRET (EX: 9999)">
+                    <p style="color:#fff; margin-bottom:5px;" id="lobby-title-action">SALON SÉLECTIONNÉ</p>
+                    <input type="text" id="secret-code-input" placeholder="CODE SECRET (EX: 1234)">
                     <div class="btn-side">
                         <button class="main-btn" style="background:#27ae60;" onclick="initLobbyAction(true)">CRÉER</button>
                         <button class="main-btn" style="background:#3871e0;" onclick="initLobbyAction(false)">REJOINDRE</button>
                     </div>
                 </div>
             </div>
-            <p id="status-text" style="color:#e03838; font-size:0.4rem; text-align:center;"></p>
+            <p id="status-text" style="color:#e03838; font-size:8px; text-align:center;"></p>
         </div>
 
         <div id="content-touches" class="tab-content">
             <div class="box" style="text-align:left;">
-                <p style="color:#3871e0; text-align:center; margin-bottom:8px;">CLIQUE ET ENFONCE UNE TOUCHE :</p>
+                <p style="color:#3871e0; text-align:center; margin-bottom:8px;">CLIQUE PUIS APPUIE SUR UNE TOUCHE :</p>
                 <div class="key-row"><span>AVANCER :</span><button class="key-bind-btn" id="kb-UP" onclick="listenNewKey('UP')">Z</button></div>
                 <div class="key-row"><span>RECULER :</span><button class="key-bind-btn" id="kb-DOWN" onclick="listenNewKey('DOWN')">S</button></div>
                 <div class="key-row"><span>GAUCHE :</span><button class="key-bind-btn" id="kb-LEFT" onclick="listenNewKey('LEFT')">Q</button></div>
                 <div class="key-row"><span>DROITE :</span><button class="key-bind-btn" id="kb-RIGHT" onclick="listenNewKey('RIGHT')">D</button></div>
-                <div class="key-row"><span>TIRER :</span><button class="key-bind-btn" id="kb-SHOOT" onclick="listenNewKey('SHOOT')">Space</button></div>
+                <div class="key-row"><span>TIRER :</span><button class="key-bind-btn" id="kb-SHOOT" onclick="listenNewKey('SHOOT')">Espace</button></div>
                 <div class="key-row"><span>DASH :</span><button class="key-bind-btn" id="kb-DASH" onclick="listenNewKey('DASH')">ShiftLeft</button></div>
                 <div class="key-row"><span>ULTI :</span><button class="key-bind-btn" id="kb-ULTI" onclick="listenNewKey('ULTI')">E</button></div>
             </div>
@@ -168,14 +177,19 @@
     <div id="game-zone">
         <div id="ui">
             <div class="hp-container">
-                <div id="local-title" style="font-size:0.4rem; color:#3871e0;">TOI</div>
+                <div id="local-title">TOI</div>
                 <div class="bar-border"><div id="hp-local" class="bar-fill local-hp"></div></div>
                 <div class="bar-border" style="height:6px; margin-top:-2px;"><div id="shield-local" class="bar-fill shield-fill"></div></div>
                 <div class="ulti-border"><div id="ulti-local" class="ulti-fill"></div></div>
             </div>
-            <div id="role-indicator">MAP...</div>
+            
+            <div id="role-indicator">
+                <div id="map-name">CHARGEMENT...</div>
+                <button id="btn-surrender" onclick="surrenderMatch()">ABANDONNER</button>
+            </div>
+
             <div class="hp-container" style="align-items: flex-end;">
-                <div id="remote-title" style="font-size:0.4rem; color:#e03838;">ENNEMI</div>
+                <div id="remote-title">ENNEMI</div>
                 <div class="bar-border"><div id="hp-remote" class="bar-fill remote-hp"></div></div>
                 <div class="bar-border" style="height:6px; margin-top:-2px;"><div id="shield-remote" class="bar-fill shield-fill"></div></div>
                 <div class="ulti-border"><div id="ulti-remote" class="ulti-fill"></div></div>
@@ -185,8 +199,8 @@
         <div class="canvas-container">
             <canvas id="gameCanvas" width="800" height="450"></canvas>
             <div class="winner-screen" id="winnerScreen">
-                <div class="winner-text" id="winnerText">FIN</div>
-                <button class="main-btn" onclick="location.reload()" style="width:auto; padding: 8px 16px;">QUITTER LE SALON</button>
+                <div class="winner-text" id="winnerText">FIN DE LA PARTIE</div>
+                <button class="main-btn" onclick="location.reload()" style="width:auto; padding: 10px 20px;">QUITTER LE SALON</button>
             </div>
         </div>
 
@@ -208,7 +222,7 @@
         let peer = null, conn = null, isHost = false;
         const keys = {};
 
-        // --- CLAVIER CONFIGURABLE ---
+        // --- CONFIGURATION TOUCHES ---
         let userKeys = { UP: 'KeyW', DOWN: 'KeyS', LEFT: 'KeyA', RIGHT: 'KeyD', SHOOT: 'Space', DASH: 'ShiftLeft', ULTI: 'KeyE' };
         let activeKeyToBind = null;
 
@@ -230,7 +244,6 @@
             document.getElementById('kb-' + action).innerText = "...TOUCHE...";
         }
 
-        // --- GESTION DES ONGLETS DU MENU ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -238,7 +251,7 @@
             document.getElementById('content-' + tabId).classList.add('active');
         }
 
-        // --- SELECTION ET DESCRIPTIONS DES CLASSES ---
+        // --- CLASSES / SKINS ---
         const classes = [
             { name: "GUERRIER", cd: 220, dmg: 10, speed: 3.4, bulletSpeed: 8, spec: "Assaut: Tir Ultra Rapide en Ulti" },
             { name: "SNIPER", cd: 600, dmg: 25, speed: 2.8, bulletSpeed: 14, spec: "Laser: Énorme dégât lourd perforant" },
@@ -253,7 +266,6 @@
             updateSkinPreview();
         }
 
-        // Mini animation loop pour l'aperçu du skin dans le menu
         const previewCanvas = document.getElementById('skin-preview-canvas');
         const pCtx = previewCanvas.getContext('2d');
         let previewFrame = 0;
@@ -261,22 +273,19 @@
             pCtx.fillStyle = "#0b0b10"; pCtx.fillRect(0,0,80,80);
             let bobbing = Math.sin(previewFrame * 0.1) * 3;
             let cx = 40, cy = 40 + bobbing, size = 18;
-
             let color = myClassIdx === 0 ? '#3871e0' : (myClassIdx === 1 ? '#e67e22' : '#2ecc71');
             pCtx.fillStyle = color; pCtx.fillRect(cx - size, cy - size, size*2, size*2);
             pCtx.fillStyle = '#000'; pCtx.lineWidth = 3; pCtx.strokeRect(cx - size, cy - size, size*2, size*2);
-
             pCtx.fillStyle = '#111';
-            if(myClassIdx === 0) pCtx.fillRect(cx-size, cy-size, size*2, 6); // Bandeau
-            if(myClassIdx === 1) pCtx.fillRect(cx-size, cy-4, size*2, 6); // Visière Sniper
-            if(myClassIdx === 2) { pCtx.fillRect(cx-size, cy-size, 6, size*2); pCtx.fillRect(cx+size-6, cy-size, 6, size*2); } // Épaulières
-
-            pCtx.fillStyle = '#fff'; pCtx.fillRect(cx+4, cy-2, 4, 4); pCtx.fillRect(cx+12, cy-2, 4, 4); // Yeux
+            if(myClassIdx === 0) pCtx.fillRect(cx-size, cy-size, size*2, 6);
+            if(myClassIdx === 1) pCtx.fillRect(cx-size, cy-4, size*2, 6);
+            if(myClassIdx === 2) { pCtx.fillRect(cx-size, cy-size, 6, size*2); pCtx.fillRect(cx+size-6, cy-size, 6, size*2); }
+            pCtx.fillStyle = '#fff'; pCtx.fillRect(cx+4, cy-2, 4, 4); pCtx.fillRect(cx+12, cy-2, 4, 4);
             document.getElementById('class-desc').innerText = classes[myClassIdx].spec;
         }
         setInterval(() => { previewFrame++; updateSkinPreview(); }, 40);
 
-        // --- SYSTEME DE 5 LOBBIES PRIVÉS ---
+        // --- GESTION DES LOBBIES ---
         let selectedLobbySlot = 0;
         function chooseLobbySlot(num) {
             selectedLobbySlot = num;
@@ -297,8 +306,7 @@
                 isHost = true; localPlayer = p1; remotePlayer = p2; localPlayer.classIdx = myClassIdx;
                 peer = new Peer(finalLobbyStringId);
                 peer.on('open', () => { document.getElementById('status-text').innerText = "Salon ouvert ! En attente de ton pote..."; });
-                peer.on('error', err => { document.getElementById('status-text').innerText = "Erreur: Code déjà utilisé dans ce salon !"; });
-                
+                peer.on('error', err => { document.getElementById('status-text').innerText = "Erreur: Code déjà pris ou problème réseau."; });
                 peer.on('connection', connection => {
                     conn = connection;
                     conn.on('data', data => {
@@ -321,15 +329,14 @@
                         } else handleTraffic(data);
                     });
                 });
-                peer.on('error', err => { document.getElementById('status-text').innerText = "Salon introuvable. Vérifie le numéro et code !"; });
+                peer.on('error', err => { document.getElementById('status-text').innerText = "Salon introuvable !"; });
             }
         }
 
-        // --- MAPS ET JEU ---
+        // --- CODE DU JEU ---
         const maps = [
-            { name: "TEMPLE BRICK", bg: '#1a1c2c', floorColor: '#24273a', obstacles: [{x:180, y:80, w:40, h:290, type:'brick'}, {x:580, y:80, w:40, h:290, type:'brick'}, {x:360, y:195, w:80, h:60, type:'iron'}], decor: [{x:100,y:100,t:1}, {x:700,y:350,t:1}] },
-            { name: "HANGAR LUXE", bg: '#1c120c', floorColor: '#2d1e15', obstacles: [{x:340, y:125, w:120, h:200, type:'crate'}, {x:100, y:60, w:80, h:40, type:'crate'}, {x:620, y:350, w:80, h:40, type:'crate'}], decor: [{x:250,y:300,t:2}] },
-            { name: "JUNGLE BLOCS", bg: '#132415', floorColor: '#1d3620', obstacles: [{x:160, y:80, w:60, h:60, type:'bush'}, {x:160, y:310, w:60, h:60, type:'bush'}, {x:580, y:80, w:60, h:60, type:'bush'}], decor: [{x:390,y:200,t:1}] }
+            { name: "TEMPLE BRICK", bg: '#1a1c2c', floorColor: '#24273a', obstacles: [{x:180, y:80, w:40, h:290, type:'brick'}, {x:580, y:80, w:40, h:290, type:'brick'}, {x:360, y:195, w:80, h:60, type:'iron'}], decor: [] },
+            { name: "HANGAR LUXE", bg: '#1c120c', floorColor: '#2d1e15', obstacles: [{x:340, y:125, w:120, h:200, type:'crate'}, {x:100, y:60, w:80, h:40, type:'crate'}], decor: [] }
         ];
         let currentMap = maps[0];
 
@@ -342,7 +349,7 @@
             document.getElementById('mobile-controls').style.display = 'flex';
         }
 
-        // Joystick Mobile Réglé
+        // Joystick Mobile
         let joyActive = false, joyStart = { x: 0, y: 0 }, joyZone = document.getElementById('joyZone'), joyStick = document.getElementById('joyStick'), maxRadius = 26;
         joyZone.addEventListener('touchstart', e => { joyActive = true; const rect = joyZone.getBoundingClientRect(); joyStart = { x: rect.left + rect.width/2, y: rect.top + rect.height/2 }; });
         window.addEventListener('touchmove', e => {
@@ -359,36 +366,83 @@
         document.getElementById('btn-dash').addEventListener('touchstart', () => { triggerDash(); });
         document.getElementById('btn-ulti').addEventListener('touchstart', () => { triggerUltimate(); });
 
+        // --- SECURISE APPARITION ITEMS HORS DES MURS ---
+        function isItemPosValid(x, y) {
+            let safetyMargin = 25; // Garde l'item loin des boîtes de collisions
+            for (let obs of currentMap.obstacles) {
+                if (x + safetyMargin > obs.x && x - safetyMargin < obs.x + obs.w &&
+                    y + safetyMargin > obs.y && y - safetyMargin < obs.y + obs.h) {
+                    return false; 
+                }
+            }
+            return true;
+        }
+
+        // --- NETCODE & SIGNAL DE FIN ---
         function handleTraffic(data) {
-            if (data.type === 'GUEST_CLASS') { remotePlayer.classIdx = data.guestClass; }
+            if (data.type === 'GUEST_CLASS') { remotePlayer.classIdx = data.guestClass; updateHUD(); }
             else if (data.type === 'SYNC') {
                 remotePlayer.x = data.x; remotePlayer.y = data.y; remotePlayer.dx = data.dx; remotePlayer.dy = data.dy;
                 remotePlayer.hp = data.hp; remotePlayer.shield = data.shield; remotePlayer.ulti = data.ulti;
-                remotePlayer.dashing = data.dashing; remotePlayer.ultiActive = data.ultiActive; updateHPBars();
+                remotePlayer.dashing = data.dashing; remotePlayer.ultiActive = data.ultiActive; 
+                updateHUD();
             } else if (data.type === 'SHOOT') {
                 bullets.push({ x: data.x, y: data.y, vx: data.vx, vy: data.vy, owner: 'remote', dmg: data.dmg });
             } else if (data.type === 'ITEM') { items = data.items; }
             else if (data.type === 'HIT') { createParticles(data.x, data.y, '#e03838'); }
+            else if (data.type === 'GAMEOVER') { endGame(data.reason, false); }
         }
 
         function setupGame() {
             document.getElementById('setup-zone').style.display = 'none';
             document.getElementById('game-zone').style.display = 'block';
-            document.getElementById('local-title').innerText = "TOI (" + classes[localPlayer.classIdx].name + ")";
-            document.getElementById('remote-title').innerText = "ENNEMI (" + classes[remotePlayer.classIdx].name + ")";
-            document.getElementById('role-indicator').innerText = currentMap.name;
-            updateHPBars();
+            
+            // Forçage réinitialisation absolue des positions de départ
+            p1.x = 90; p1.y = 225; p1.hp = 100; p1.shield = 0; p1.ulti = 0; p1.dashing = 0; p1.ultiActive = 0;
+            p2.x = 710; p2.y = 225; p2.hp = 100; p2.shield = 0; p2.ulti = 0; p2.dashing = 0; p2.ultiActive = 0;
+            
+            gameOver = false;
+            bullets = []; items = []; particles = [];
+            updateHUD();
+
             if (isHost) {
-                setInterval(() => {
+                if(window.itemInterval) clearInterval(window.itemInterval);
+                window.itemInterval = setInterval(() => {
                     if (gameOver || items.length >= 2) return;
-                    let rx = Math.random() * 660 + 70, ry = Math.random() * 310 + 70;
-                    if (!checkCollision(rx, ry, 15)) { 
+                    let rx, ry, valid = false, tries = 0;
+                    while(!valid && tries < 100) {
+                        rx = Math.random() * 660 + 70;
+                        ry = Math.random() * 310 + 70;
+                        valid = isItemPosValid(rx, ry);
+                        tries++;
+                    }
+                    if (valid) {
                         items.push({ x: rx, y: ry, itemType: Math.random() > 0.5 ? 'heal' : 'shield' });
-                        conn.send({ type: 'ITEM', items: items }); 
+                        if(conn) conn.send({ type: 'ITEM', items: items }); 
                     }
                 }, 5000);
             }
             gameLoop();
+        }
+
+        // --- ABANDONNER ---
+        function surrenderMatch() {
+            if (confirm("Abandonner la partie et donner la victoire ?")) {
+                endGame("DÉFAITE\n(Tu as abandonné) 🏳️", true);
+            }
+        }
+
+        function endGame(text, sendToNetwork = false) {
+            if (gameOver) return;
+            gameOver = true;
+            document.getElementById('winnerText').innerText = text;
+            document.getElementById('winnerScreen').style.display = 'flex';
+            
+            if (sendToNetwork && conn) {
+                let reportReason = "VICTOIRE !\n(L'ennemi a abandonné) 🏆";
+                if(text.includes("K.O.")) reportReason = "VICTOIRE ! 🏆";
+                conn.send({ type: 'GAMEOVER', reason: reportReason });
+            }
         }
 
         function checkCollision(x, y, size) {
@@ -405,7 +459,7 @@
             if (localPlayer.ulti >= 100 && localPlayer.ultiActive === 0) {
                 localPlayer.ulti = 0; localPlayer.ultiActive = 150;
                 if (localPlayer.classIdx === 2) localPlayer.shield = Math.min(100, localPlayer.shield + 40);
-                updateHPBars();
+                updateHUD();
             }
         }
 
@@ -414,12 +468,10 @@
             let mx = 0, my = 0, speed = myData.speed;
             
             if(localPlayer.ulti < 100) localPlayer.ulti += 0.06;
-
             if (localPlayer.ultiActive > 0) {
                 localPlayer.ultiActive--;
                 if (localPlayer.classIdx === 0) speed *= 1.6;
             }
-
             if (localPlayer.dashing > 0) { speed = 8.5; localPlayer.dashing--; }
             
             if (keys[userKeys.UP] || keys['ArrowUp']) my = -1;
@@ -452,16 +504,17 @@
                             let vx = (localPlayer.dx * Math.cos(ang) - localPlayer.dy * Math.sin(ang)) * myData.bulletSpeed;
                             let vy = (localPlayer.dx * Math.sin(ang) + localPlayer.dy * Math.cos(ang)) * myData.bulletSpeed;
                             let bData = { x: localPlayer.x, y: localPlayer.y, vx: vx, vy: vy, dmg: baseDmg };
-                            bullets.push({ ...bData, owner: 'local' }); conn.send({ type: 'SHOOT', ...bData });
+                            bullets.push({ ...bData, owner: 'local' }); if(conn) conn.send({ type: 'SHOOT', ...bData });
                         });
                     } else {
                         let bData = { x: localPlayer.x, y: localPlayer.y, vx: localPlayer.dx * myData.bulletSpeed, vy: localPlayer.dy * myData.bulletSpeed, dmg: baseDmg };
-                        bullets.push({ ...bData, owner: 'local' }); conn.send({ type: 'SHOOT', ...bData });
+                        bullets.push({ ...bData, owner: 'local' }); if(conn) conn.send({ type: 'SHOOT', ...bData });
                     }
                     lastShot = now;
                 }
             }
-            conn.send({ type: 'SYNC', x: localPlayer.x, y: localPlayer.y, dx: localPlayer.dx, dy: localPlayer.dy, hp: localPlayer.hp, shield: localPlayer.shield, ulti: localPlayer.ulti, dashing: localPlayer.dashing, ultiActive: localPlayer.ultiActive });
+            if(conn) conn.send({ type: 'SYNC', x: localPlayer.x, y: localPlayer.y, dx: localPlayer.dx, dy: localPlayer.dy, hp: localPlayer.hp, shield: localPlayer.shield, ulti: localPlayer.ulti, dashing: localPlayer.dashing, ultiActive: localPlayer.ultiActive });
+            updateHUD();
         }
 
         function createParticles(x, y, color) {
@@ -469,7 +522,9 @@
         }
 
         function update() {
-            if (gameOver) return; updateLocalPlayer();
+            if (gameOver) return; 
+            updateLocalPlayer();
+            
             particles.forEach((p, idx) => { p.x += p.vx; p.y += p.vy; p.alpha -= 0.05; if(p.alpha <= 0) particles.splice(idx, 1); });
 
             for (let i = bullets.length - 1; i >= 0; i--) {
@@ -481,21 +536,32 @@
                     if (localPlayer.shield > 0) {
                         localPlayer.shield -= totalDmg; if (localPlayer.shield < 0) { localPlayer.hp += localPlayer.shield; localPlayer.shield = 0; }
                     } else { localPlayer.hp = Math.max(0, localPlayer.hp - totalDmg); }
-                    createParticles(b.x, b.y, '#3871e0'); conn.send({ type: 'HIT', x: b.x, y: b.y }); bullets.splice(i, 1); updateHPBars();
-                    if (localPlayer.hp <= 0) endGame("DEFAITE... K.O. 💀");
+                    
+                    createParticles(b.x, b.y, '#3871e0'); 
+                    if(conn) conn.send({ type: 'HIT', x: b.x, y: b.y }); 
+                    bullets.splice(i, 1); 
+                    updateHUD();
+                    
+                    if (localPlayer.hp <= 0) { endGame("DÉFAITE... K.O. 💀", true); }
                 }
             }
+            
             for (let i = items.length - 1; i >= 0; i--) {
                 if (Math.hypot(localPlayer.x - items[i].x, localPlayer.y - items[i].y) < localPlayer.size + 10) {
                     if (items[i].itemType === 'shield') localPlayer.shield = Math.min(100, localPlayer.shield + 30);
                     else localPlayer.hp = Math.min(100, localPlayer.hp + 25);
-                    updateHPBars(); items.splice(i, 1); if(isHost) conn.send({ type: 'ITEM', items: items });
+                    updateHUD(); items.splice(i, 1); if(isHost && conn) conn.send({ type: 'ITEM', items: items });
                 }
             }
-            if (remotePlayer.hp <= 0) endGame("VICTOIRE ! 🏆");
         }
 
-        function updateHPBars() {
+        // --- ENSEMBLE DE MISE A JOUR DU HUD EN TEMPS REEL ---
+        function updateHUD() {
+            if(!localPlayer || !remotePlayer) return;
+            document.getElementById('local-title').innerText = "TOI (" + classes[localPlayer.classIdx].name + ")";
+            document.getElementById('remote-title').innerText = "ENNEMI (" + classes[remotePlayer.classIdx].name + ")";
+            document.getElementById('map-name').innerText = currentMap.name;
+
             document.getElementById('hp-local').style.width = Math.max(0, localPlayer.hp) + '%';
             document.getElementById('shield-local').style.width = Math.max(0, localPlayer.shield) + '%';
             document.getElementById('ulti-local').style.width = Math.min(100, localPlayer.ulti) + '%';
@@ -509,21 +575,14 @@
             ctx.fillStyle = currentMap.floorColor;
             for(let x=0; x<canvas.width; x+=40) { for(let y=0; y<canvas.height; y+=40) { if((x+y)%80===0) ctx.fillRect(x, y, 38, 38); } }
 
-            // Obstacles
             currentMap.obstacles.forEach(obs => {
-                if (obs.type === 'brick') {
-                    ctx.fillStyle = '#6b3c3c'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                    ctx.fillStyle = '#4a2525'; for(let yy = obs.y + 8; yy < obs.y + obs.h; yy += 12) ctx.fillRect(obs.x, yy, obs.w, 3);
-                } else if (obs.type === 'crate') {
-                    ctx.fillStyle = '#a06030'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                    ctx.strokeStyle = '#503010'; ctx.lineWidth = 3; ctx.strokeRect(obs.x+3, obs.y+3, obs.w-6, obs.h-6);
-                } else {
-                    ctx.fillStyle = '#737385'; ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
-                }
+                if (obs.type === 'brick') ctx.fillStyle = '#6b3c3c';
+                else if (obs.type === 'crate') ctx.fillStyle = '#a06030';
+                else ctx.fillStyle = '#737385';
+                ctx.fillRect(obs.x, obs.y, obs.w, obs.h);
                 ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(obs.x, obs.y, obs.w, obs.h);
             });
 
-            // Items
             items.forEach(item => {
                 ctx.fillStyle = item.itemType === 'shield' ? '#f1c40f' : '#2ecc71';
                 ctx.fillRect(item.x-8, item.y-8, 16, 16);
@@ -536,15 +595,16 @@
 
             particles.forEach(p => { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size); });
 
-            drawPixelPlayer(localPlayer, '#3871e0', '#1d3b75');
-            drawPixelPlayer(remotePlayer, '#e03838', '#751d1d');
+            drawPixelPlayer(localPlayer);
+            drawPixelPlayer(remotePlayer);
         }
 
-        function drawPixelPlayer(p, mainColor, darkColor) {
+        function drawPixelPlayer(p) {
             if (p.hp <= 0) return;
             if(p.ultiActive > 0) { ctx.fillStyle = 'rgba(155, 89, 182, 0.4)'; ctx.fillRect(p.x-p.size-6, p.y-p.size-6, p.size*2+12, p.size*2+12); }
             if(p.dashing > 0) { ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.fillRect(p.x-p.size-3, p.y-p.size-3, p.size*2+6, p.size*2+6); }
 
+            // Utilise la bonne couleur selon sa classe réelle synchronisée
             ctx.fillStyle = p.classIdx === 0 ? '#3871e0' : (p.classIdx === 1 ? '#e67e22' : '#2ecc71');
             ctx.fillRect(p.x - p.size, p.y - p.size, p.size * 2, p.size * 2);
             
@@ -561,10 +621,7 @@
             if(p.shield > 0) { ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 2; ctx.strokeRect(p.x - p.size - 4, p.y - p.size - 4, p.size * 2 + 8, p.size * 2 + 8); }
         }
 
-        function endGame(text) { gameOver = true; document.getElementById('winnerText').innerText = text; document.getElementById('winnerScreen').style.display = 'flex'; }
         function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
-        
-        // Init preview par défaut
         updateSkinPreview();
     </script>
 </body>
